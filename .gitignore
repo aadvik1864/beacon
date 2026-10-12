@@ -14,3 +14,10 @@ frontend/playwright-report/
 reports/*
 !reports/.gitkeep
 .DS_Store
+secrets/
+*.pem
+*.key
+*.p12
+*.pfx
+*.sqlite*
+deploy/.env

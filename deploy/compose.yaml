@@ -1,0 +1,171 @@
+name: beacon
+
+x-hardening: &hardening
+  restart: unless-stopped
+  read_only: true
+  user: '10001:10001'
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  pids_limit: 100
+  logging:
+    driver: local
+    options:
+      max-size: '5m'
+      max-file: '2'
+
+services:
+  edge:
+    <<: *hardening
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.edge
+    environment:
+      BEACON_HOST: ${BEACON_HOST:?Set the canonical DNS hostname}
+    ports: ['80:8080', '443:8443']
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - tls_data:/data
+      - tls_config:/config
+    tmpfs: ['/tmp:size=16m,mode=1777']
+    mem_limit: 256m
+    cpus: 1
+    networks: [edge]
+    depends_on: [sso]
+
+  sso:
+    <<: *hardening
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.sso
+    command:
+      - --config=/run/secrets/sso_store_config
+      - --provider=oidc
+      - --http-address=0.0.0.0:4180
+      - --reverse-proxy=true
+      - --oidc-issuer-url=${OIDC_ISSUER_URL:?Set your HTTPS OIDC issuer URL}
+      - --client-id=${OIDC_CLIENT_ID:?Set your OIDC client ID}
+      - --client-secret-file=/run/secrets/oidc_client_secret
+      - --cookie-secret-file=/run/secrets/cookie_key
+      - --redirect-url=https://${BEACON_HOST}/oauth2/callback
+      - --upstream=http://gateway:8080/
+      - --authenticated-emails-file=/run/secrets/allowed_emails
+      - --scope=openid email profile
+      - --code-challenge-method=S256
+      - --insecure-oidc-skip-nonce=false
+      - --insecure-oidc-allow-unverified-email=false
+      - --insecure-oidc-skip-issuer-verification=false
+      - --ssl-insecure-skip-verify=false
+      - --cookie-name=__Host-beacon_sso
+      - --cookie-secure=true
+      - --cookie-httponly=true
+      - --cookie-samesite=lax
+      - --cookie-expire=1h
+      - --cookie-refresh=5m
+      - --session-store-type=redis
+      - --redis-connection-url=redis://sessions:6379/0
+      - --cookie-csrf-per-request=true
+      - --cookie-csrf-per-request-limit=5
+      - --cookie-csrf-expire=5m
+      - --pass-user-headers=true
+      - --pass-basic-auth=false
+      - --pass-access-token=false
+      - --pass-authorization-header=false
+      - --proxy-websockets=false
+      - --show-debug-on-error=false
+      - --skip-provider-button=true
+      - --api-route=^/api(?:/|$)
+      - --request-logging=false
+      - --auth-logging=false
+      - --standard-logging=false
+      - --errors-to-info-log=true
+    secrets: [oidc_client_secret, cookie_key, allowed_emails, sso_store_config]
+    tmpfs: ['/tmp:size=16m,mode=1777']
+    mem_limit: 256m
+    cpus: 1
+    networks: [edge, authenticated, sessions]
+    depends_on:
+      gateway:
+        condition: service_healthy
+      sessions:
+        condition: service_healthy
+
+  sessions:
+    <<: *hardening
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.sessions
+    working_dir: /tmp
+    command: [redis-server, /run/secrets/redis_config, --bind, '0.0.0.0', --save, '', --appendonly, 'no', --dir, /tmp, --maxmemory, 64mb, --maxmemory-policy, volatile-ttl, --maxclients, '64', --loglevel, warning]
+    secrets: [redis_config]
+    tmpfs: ['/tmp:size=16m,mode=1777']
+    mem_limit: 128m
+    cpus: 1
+    networks: [sessions]
+    healthcheck:
+      test: [CMD-SHELL, 'REDISCLI_AUTH="$$(sed -n "s/^requirepass //p" /run/secrets/redis_config)" redis-cli ping | grep -q PONG']
+      interval: 10s
+      timeout: 3s
+      start_period: 5s
+
+  gateway:
+    <<: *hardening
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.gateway
+    environment:
+      BEACON_HOST: ${BEACON_HOST}
+    secrets: [gateway_key]
+    tmpfs: ['/tmp:size=32m,mode=1777']
+    mem_limit: 128m
+    cpus: 1
+    networks: [authenticated, backend]
+    depends_on:
+      api:
+        condition: service_healthy
+
+  api:
+    <<: *hardening
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.api
+    environment:
+      BEACON_ENV: production
+      BEACON_PUBLIC_ORIGIN: https://${BEACON_HOST}
+      BEACON_GATEWAY_SECRET_FILE: /run/secrets/gateway_key
+      BEACON_CSRF_SECRET_FILE: /run/secrets/csrf_key
+      BEACON_ALLOWED_EMAILS_FILE: /run/secrets/allowed_emails
+      OTEL_SDK_DISABLED: 'true'
+    secrets: [gateway_key, csrf_key, allowed_emails]
+    tmpfs: ['/tmp:size=16m,mode=1777']
+    mem_limit: 256m
+    cpus: 1
+    networks: [backend]
+
+networks:
+  edge: {}
+  authenticated:
+    internal: true
+  backend:
+    internal: true
+  sessions:
+    internal: true
+
+volumes:
+  tls_data: {}
+  tls_config: {}
+
+secrets:
+  gateway_key:
+    file: ${BEACON_SECRETS_DIR:?Use an absolute directory outside the repository}/gateway_key
+  csrf_key:
+    file: ${BEACON_SECRETS_DIR}/csrf_key
+  cookie_key:
+    file: ${BEACON_SECRETS_DIR}/cookie_key
+  allowed_emails:
+    file: ${BEACON_SECRETS_DIR}/allowed_emails
+  oidc_client_secret:
+    file: ${BEACON_SECRETS_DIR}/oidc_client_secret
+  redis_config:
+    file: ${BEACON_SECRETS_DIR}/redis_config
+  sso_store_config:
+    file: ${BEACON_SECRETS_DIR}/sso_store_config

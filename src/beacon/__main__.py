@@ -13,7 +13,7 @@ from beacon.simulation import simulate
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Beacon local scripted simulation — no AWS or live LLM")
+    parser = argparse.ArgumentParser(prog="beacon", description="Beacon local scripted simulation. No AWS or live LLM.")
     source = parser.add_mutually_exclusive_group()
     source.add_argument("--scenario", choices=["clean", "injected"], default="clean")
     source.add_argument("--policy", type=Path, help="Read a local UTF-8 policy draft, limited to 8 KiB")
@@ -41,7 +41,7 @@ def main(argv: list[str] | None = None) -> int:
     if arguments.format == "json":
         print(record.model_dump_json(indent=2))
     else:
-        print("Beacon — LOCAL SIMULATION (scripted fixture, not an LLM or AWS IAM)")
+        print("Beacon: LOCAL SIMULATION (scripted fixture, not an LLM or AWS IAM)")
         print(f"Run: {record.id}\nPolicy SHA-256: {record.document_hash}")
         for result in record.results:
             print(f"\n{result.role}: {result.outcome}\n{result.explanation}")

@@ -35,6 +35,7 @@ vi.stubGlobal('crypto', webcrypto);
 vi.stubGlobal('TextEncoder', TextEncoder);
 vi.stubGlobal('TextDecoder', TextDecoder);
 window.scrollTo = vi.fn();
+vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
 
 HTMLDialogElement.prototype.showModal = function () { this.setAttribute('open', ''); };
 HTMLDialogElement.prototype.close = function () {

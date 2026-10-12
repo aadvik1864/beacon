@@ -20,6 +20,7 @@ def test_health_does_not_enable_cloud_services(client):
         "stage": "local-simulation",
         "aws_enabled": False,
         "paid_inference_enabled": False,
+        "access_mode": "local",
     }
     assert response.headers["cache-control"] == "no-store"
     assert response.headers["x-content-type-options"] == "nosniff"
@@ -34,6 +35,12 @@ def test_targets_are_fixed_and_not_provisioned(client):
     assert [target["id"] for target in data["targets"]] == ["vulnerable", "protected"]
     assert all(target["provisioned"] is False for target in data["targets"])
     assert data["targets"][1]["allowed_documents"] == ["leave_policy"]
+
+
+def test_api_documentation_uses_beacon_name(client):
+    response = client.get("/api/openapi.json")
+    assert response.status_code == 200
+    assert response.json()["info"]["title"] == "Beacon"
 
 
 def test_cors_allows_only_expected_frontend_origin(client):

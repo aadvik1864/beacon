@@ -4,6 +4,9 @@ A local-first, interactive workbench for studying prompt injection and AWS
 least privilege. Built with React, TypeScript, Vite, Tailwind, React Bits, and
 a small Python/FastAPI backend.
 
+The project folder, npm package, Python distribution, and Python module are all
+named `beacon`. The GitHub repository is `aadvik1864/beacon` and remains private.
+
 ## Implemented scope
 
 Beacon **v0.2** includes the interface foundation and a complete local experiment flow:
@@ -13,9 +16,13 @@ Beacon **v0.2** includes the interface foundation and a complete local experimen
 - Paired vulnerable/protected results with separately observed retrieval and disclosure.
 - Interactive React Flow access graph, filtered event trace, and replay controls.
 - Validated JSON replay import and JSON/Markdown report export.
-- Adapted React Bits Stepper, AnimatedList, CallChip, and StatusMark components.
+- Adapted React Bits Stepper, AnimatedList, CallChip, StatusMark, SpotlightCard,
+  RubberSegment, and ClickSpark components. The playground uses them for document
+  selection, pointer/focus lighting, run feedback, and captured outcomes.
 - Interactive role/document explanations, setup walkthrough, and component bench.
 - Local simulation CLI, keyboard access, reduced motion, local fonts, and automated tests.
+- Private HTTPS/SSO deployment, user-isolated API captures, expiring CSRF tokens,
+  server-side logout, secret-file mounts, and security regression/scan gates.
 
 **The assistant is a deterministic scripted fixture, not an LLM. Permissions
 are checked by a local mock document store, not AWS IAM.** There is no AWS
@@ -60,15 +67,22 @@ The frontend dependency snapshot is `frontend/package-lock.json`.
 
 ## Try an experiment
 
+Before running, select **Leave policy** or **Payroll** in the permission preview.
+This illustrates the fixed local scopes without changing the draft, running
+tools, or producing evidence. Motion responds to interaction, with no animated
+background loop, and respects system or explicit reduced-motion settings.
+
 1. Run **Run comparison** with the clean policy: both profiles show **Not triggered**.
-2. Choose **Load attack example**, then **Run comparison**. The vulnerable profile
+2. Choose **Attack example**, then **Run comparison**. The vulnerable profile
    exposes synthetic payroll; the protected profile shows **Blocked locally**.
-3. Inspect the request, retrieval, context-delivery, and answer measurements.
-   Scrub the recorded trace to update the access graph, or filter for denials.
-4. Try **Ignore embedded instructions** or **Retrieve without disclosing**.
+3. Open **Access details** for retrieval/context/disclosure measurements. Open
+   **Inspect run** for the **Events** and **Access path** tabs. Scrubbing Events
+   updates the graph; switching tabs preserves filters and graph layout.
+4. Open **Options** to change simulation behavior, question presets, or run target.
+   Try **Ignore embedded instructions** or **Retrieve without disclosing**.
    A non-triggered attack is not proof of permission enforcement. Retrieval without
    disclosure still delivers restricted data to the scripted context.
-5. Export JSON to retain a capture, or Markdown for a readable report. Imported
+5. Open **Export** for JSON replay or a Markdown report. Imported
    JSON is always labeled **authenticity unverified**; a document hash does not
    authenticate the file or establish AWS evidence.
 
@@ -116,14 +130,19 @@ Later: Browser → local API → **future** fixed Lambda targets → **future** 
 The future protected and vulnerable targets will use separate execution roles,
 not a user-provided role ARN or a permission switch inside one function.
 
-The current API binds to loopback, restricts hosts/origins, checks a process-local
-session token, bounds request sizes, blocks overlapping simulations, and limits
-new runs to 30/minute. Idempotency records are in memory, bounded to 20 entries,
-and expire after 30 minutes. Clear capture removes the browser view, not the
-short-lived API cache. Nothing is automatically persisted to disk.
+Development uses loopback hosts/origins and expiring request tokens, bounded
+requests, one simulation at a time, and 30 new runs/minute. In-memory retry
+captures are bounded to 20 and expire after 30 minutes locally or 5 minutes in
+production. Clearing an API capture also requests deletion of your API cache. No lab data
+is automatically persisted to disk. Common credential patterns are rejected;
+this is not a general secret/PII detector.
 
 **Do not expose this development API publicly.** The session token is a local
-request-protection mechanism, not user authentication. AWS implementation needs
+request-protection mechanism, not user authentication. For hosting, use the
+separate [private HTTPS/SSO deployment](docs/deployment.md), complete its launch
+checklist, and keep the API/session store private. Production configuration fails
+closed without independent server secrets and an explicit user allowlist.
+AWS implementation needs
 explicit approval, region/model selection, cost review, fixed isolated roles,
 and a cleanup plan. Free-tier eligibility is not assumed.
 

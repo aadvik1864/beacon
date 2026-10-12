@@ -5,6 +5,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from beacon.sensitive import reject_credentials
+
 Role = Literal["vulnerable", "protected"]
 Behavior = Literal["follow", "ignore", "retrieve_only"]
 Outcome = Literal[
@@ -27,6 +29,11 @@ class SimulationInput(StrictModel):
     question: str = Field(min_length=1, max_length=1024)
     behavior: Behavior = "follow"
     target: Literal["both", "vulnerable", "protected"] = "both"
+
+    @field_validator("policy", "question")
+    @classmethod
+    def no_credentials(cls, value: str) -> str:
+        return reject_credentials(value)
 
     @field_validator("idempotency_key")
     @classmethod

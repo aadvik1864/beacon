@@ -1,0 +1,61 @@
+{
+    admin off
+    auto_https disable_redirects
+    http_port 8080
+    https_port 8443
+    log {
+        level ERROR
+        format filter {
+            wrap json
+            fields {
+                request delete
+                resp_headers delete
+                err_trace delete
+                error delete
+            }
+        }
+    }
+    servers {
+        timeouts {
+            read_header 10s
+            read_body 10s
+            write 30s
+            idle 30s
+        }
+        max_header_size 16KB
+    }
+}
+http://{$BEACON_HOST} {
+    redir https://{$BEACON_HOST}{uri} 308
+}
+https://{$BEACON_HOST} {
+    header {
+        Strict-Transport-Security "max-age=31536000"
+        Cache-Control "no-store"
+        X-Content-Type-Options nosniff
+        Referrer-Policy no-referrer
+        X-Frame-Options DENY
+        -Server
+    }
+    request_body {
+        max_size 32KB
+    }
+    # No publicly reachable internal health/probe routes.
+    @internal path /healthz /ping /ready
+    respond @internal 404
+    reverse_proxy sso:4180 {
+        header_up -X-Beacon-Gateway
+        header_up -X-Beacon-Identity
+        header_up -X-Forwarded-Email
+        header_up -X-Forwarded-User
+        header_up -X-Forwarded-Access-Token
+        header_up -X-Auth-Request-Email
+        header_up -X-Auth-Request-User
+        header_up -Authorization
+        header_up X-Forwarded-Proto https
+        transport http {
+            dial_timeout 3s
+            response_header_timeout 20s
+        }
+    }
+}

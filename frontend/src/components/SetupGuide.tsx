@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { FileText, LockKeyhole, ScanSearch, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import Stepper, { Step } from './react-bits/Stepper';
 
 export default function SetupGuide({ onClose, reduceMotion }: { onClose: () => void; reduceMotion: boolean }) {
@@ -21,27 +21,24 @@ export default function SetupGuide({ onClose, reduceMotion }: { onClose: () => v
       }}
     >
       <div className="dialog-header">
-        <div><span className="text-note">A quick orientation</span><h2 id="guide-title">How this lab will work</h2></div>
+        <h2 id="guide-title">Quick guide</h2>
         <button className="icon-button" aria-label="Close setup guide" onClick={() => ref.current?.close()}><X size={19} /></button>
       </div>
       <Stepper labels={['Documents', 'Permissions', 'Evidence']} reduceMotion={reduceMotion} onFinalStepCompleted={() => ref.current?.close()}>
         <Step>
-          <div className="guide-illustration"><FileText size={34} /><span>Document ≠ instruction</span></div>
-          <h3>Read the policy. Don’t trust its instructions.</h3>
-          <p>The future assistant will retrieve a leave policy. An embedded attack will try to make it request a separate, synthetic payroll file.</p>
-          <div className="guide-callout">The Playground now runs a local scripted fixture. Real model behavior and AWS permission enforcement still require separate live tests.</div>
+          <h3>Edit the policy</h3>
+          <p>Use the attack example to add an instruction requesting the synthetic payroll file, then run a comparison.</p>
+          <div className="guide-callout">This is a scripted local simulation, not a live model or AWS test.</div>
         </Step>
         <Step>
-          <div className="guide-illustration"><LockKeyhole size={34} /><span>The boundary is outside the AI</span></div>
-          <h3>Same model. Different AWS permissions.</h3>
-          <p>Two separate Lambda functions will use fixed execution roles. One can read both lab documents; the other can read only the policy.</p>
-          <div className="guide-callout">Changing a component preview does not change real permissions. No roles or buckets have been created.</div>
+          <h3>Compare access</h3>
+          <p>The vulnerable profile can read the policy and payroll. The protected profile can read only the policy.</p>
+          <div className="guide-callout">Future AWS tests will use separate Lambda execution roles. None have been deployed.</div>
         </Step>
         <Step>
-          <div className="guide-illustration"><ScanSearch size={34} /><span>Evidence before conclusions</span></div>
-          <h3>Inspect what actually happened.</h3>
-          <p>The local trace distinguishes a non-triggered attack, blocked retrieval, context delivery, and final disclosure. A future live test must separately capture real model behavior and S3 AccessDenied.</p>
-          <div className="guide-callout">Local events are not AWS audit records. A model saying it read a file is not proof of exposure.</div>
+          <h3>Inspect the run</h3>
+          <p>Open Access details for each answer, or Inspect run for the event trace and access path. Export JSON to save a replay.</p>
+          <div className="guide-callout">Local events do not prove AWS access or denial. Imported replay files are unverified.</div>
         </Step>
       </Stepper>
     </dialog>

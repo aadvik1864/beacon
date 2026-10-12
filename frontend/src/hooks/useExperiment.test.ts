@@ -1,11 +1,11 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useExperiment } from './useExperiment';
-import { runSimulation } from '../lib/api';
+import { clearApiCaptures, runSimulation } from '../lib/api';
 import { baselineRecord } from '../test/runFixture';
 import type { RunRecord } from '../lib/experiment';
 
-vi.mock('../lib/api', () => ({ runSimulation: vi.fn() }));
+vi.mock('../lib/api', () => ({ runSimulation: vi.fn(), clearApiCaptures: vi.fn().mockResolvedValue(undefined) }));
 
 beforeEach(() => { vi.mocked(runSimulation).mockReset(); });
 
@@ -78,7 +78,8 @@ describe('experiment controls', () => {
     act(() => result.current.selectEvent(2));
     expect(result.current.playing).toBe(false);
     expect(result.current.cursor).toBe(2);
-    act(() => result.current.clear());
+    await act(() => result.current.clear());
+    expect(clearApiCaptures).toHaveBeenCalled();
     await waitFor(() => expect(result.current.record).toBeNull());
   });
 });

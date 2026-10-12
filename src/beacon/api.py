@@ -1,19 +1,21 @@
 """Beacon local API. No AWS SDK, provisioning, or paid inference is enabled."""
 
-import hmac
-import secrets
+import asyncio
+from contextlib import asynccontextmanager, suppress
 from typing import Literal
 
 from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 from starlette.responses import JSONResponse
 
 from beacon import __version__
+from beacon.config import Settings
 from beacon.models import RunRecord, SimulationInput
 from beacon.repository import RunBusy, RunConflict, RunRepository
-from beacon.security import ALLOWED_ORIGINS, BodyLimitMiddleware
+from beacon.security import BodyLimitMiddleware, SecurityBoundaryMiddleware, SessionTokens, configure_security_logging
 
 
 class HealthResponse(BaseModel):
@@ -23,51 +25,59 @@ class HealthResponse(BaseModel):
     stage: Literal["local-simulation"] = "local-simulation"
     aws_enabled: Literal[False] = False
     paid_inference_enabled: Literal[False] = False
+    access_mode: Literal["local", "sso"] = "local"
 
 
-def create_app() -> FastAPI:
+def create_app(settings: Settings | None = None) -> FastAPI:
+    settings = settings or Settings.from_env()
+    if settings.production:
+        configure_security_logging()
+
+    @asynccontextmanager
+    async def lifespan(app):
+        async def expire_captures():
+            while True:
+                await asyncio.sleep(30)
+                app.state.runs.purge_expired()
+        cleanup = asyncio.create_task(expire_captures())
+        try:
+            yield
+        finally:
+            cleanup.cancel()
+            with suppress(asyncio.CancelledError):
+                await cleanup
+
     app = FastAPI(
-        title="Beacon — AI cloud security lab", version=__version__,
+        title="Beacon", version=__version__,
         description="Local scripted simulations only. No AWS access or paid inference.",
-        docs_url="/api/docs", openapi_url="/api/openapi.json", redoc_url=None,
+        docs_url=None if settings.production else "/api/docs",
+        openapi_url=None if settings.production else "/api/openapi.json", redoc_url=None, lifespan=lifespan,
     )
-    app.state.session_token = secrets.token_urlsafe(32)
-    app.state.runs = RunRepository()
+    app.state.tokens = SessionTokens(settings.csrf_secret)
+    app.state.runs = RunRepository(ttl=300 if settings.production else 1800)
+    app.state.settings = settings
     app.add_middleware(BodyLimitMiddleware)
-    app.add_middleware(
-        CORSMiddleware, allow_origins=sorted(ALLOWED_ORIGINS),
-        allow_credentials=False, allow_methods=["GET", "POST"],
-        allow_headers=["Accept", "Content-Type", "X-Beacon-Token"],
-    )
-    app.add_middleware(TrustedHostMiddleware, allowed_hosts=["localhost", "127.0.0.1"], www_redirect=False)
+    if not settings.production:
+        app.add_middleware(
+            CORSMiddleware, allow_origins=sorted(settings.origins),
+            allow_credentials=False, allow_methods=["GET", "POST"],
+            allow_headers=["Accept", "Content-Type", "X-Beacon-Token"],
+        )
+    app.add_middleware(TrustedHostMiddleware, allowed_hosts=list(settings.hosts), www_redirect=False)
+    app.add_middleware(SecurityBoundaryMiddleware, settings=settings)
 
-    @app.middleware("http")
-    async def local_request_boundary(request: Request, call_next):
-        origin = request.headers.get("origin")
-        protected_request = request.method in {"POST", "PUT", "PATCH", "DELETE"} or request.url.path == "/api/session"
-        if protected_request and (
-            (origin is not None and origin not in ALLOWED_ORIGINS)
-            or request.headers.get("sec-fetch-site") == "cross-site"
-        ):
-            response = JSONResponse({"detail": "Only the trusted local interface may initiate simulations."}, status_code=403)
-        elif request.method == "POST" and request.url.path == "/api/simulations" and request.headers.get("content-type", "").split(";")[0].strip() != "application/json":
-            response = JSONResponse({"detail": "Simulation requests must use application/json."}, status_code=415)
-        else:
-            response = await call_next(request)
-        response.headers["Cache-Control"] = "no-store"
-        response.headers["X-Content-Type-Options"] = "nosniff"
-        response.headers["Referrer-Policy"] = "no-referrer"
-        return response
+    @app.exception_handler(RequestValidationError)
+    async def validation_error(request: Request, error: RequestValidationError):
+        # FastAPI's default error includes rejected raw inputs and validator context.
+        return JSONResponse({"detail": "Invalid request. Check input limits and use synthetic data without credentials."}, status_code=422)
 
     def require_session(request: Request):
-        supplied = request.headers.get("x-beacon-token", "").encode("utf-8")
-        expected = app.state.session_token.encode("utf-8")
-        if not hmac.compare_digest(supplied, expected):
-            raise HTTPException(status_code=403, detail="Local session expired or missing. Refresh and try again.")
+        if not app.state.tokens.valid(request.state.principal, request.headers.get("x-beacon-token", "")):
+            raise HTTPException(status_code=403, detail="Request session expired or missing. Refresh and try again.")
 
     @app.get("/api/health", response_model=HealthResponse)
     def health():
-        return HealthResponse()
+        return HealthResponse(access_mode="sso" if settings.production else "local")
 
     @app.get("/api/capabilities")
     def capabilities():
@@ -81,18 +91,23 @@ def create_app() -> FastAPI:
         }
 
     @app.get("/api/session")
-    def session():
-        # Memory only. No cookies, browser persistence, or AWS credentials.
-        return {"token": app.state.session_token}
+    def session(request: Request):
+        # Browser only receives a short-lived CSRF token, never gateway/SSO secrets.
+        return {"token": app.state.tokens.issue(request.state.principal)}
 
     @app.post("/api/simulations", response_model=RunRecord, dependencies=[Depends(require_session)])
-    def run_simulation(request: SimulationInput):
+    def run_simulation(request: SimulationInput, http_request: Request):
         try:
-            return app.state.runs.execute(request)
+            return app.state.runs.execute(request, principal=http_request.state.principal)
         except RunConflict as error:
             raise HTTPException(status_code=409, detail=str(error)) from error
         except RunBusy as error:
             raise HTTPException(status_code=429, detail=str(error), headers={"Retry-After": "60"}) from error
+
+    @app.post("/api/captures/clear", dependencies=[Depends(require_session)])
+    def clear_captures(request: Request):
+        app.state.runs.clear(request.state.principal)
+        return {"cleared": True}
 
     return app
 

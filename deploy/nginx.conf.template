@@ -1,0 +1,61 @@
+worker_processes 1;
+pid /tmp/nginx.pid;
+error_log /dev/null;
+events { worker_connections 256; }
+http {
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
+    access_log off;
+    server_tokens off;
+    client_max_body_size 32k;
+    client_body_timeout 10s;
+    client_header_timeout 10s;
+    send_timeout 10s;
+    keepalive_timeout 10s;
+    large_client_header_buffers 2 8k;
+    client_body_temp_path /tmp/client_body;
+    proxy_temp_path /tmp/proxy;
+    fastcgi_temp_path /tmp/fastcgi;
+    uwsgi_temp_path /tmp/uwsgi;
+    scgi_temp_path /tmp/scgi;
+    limit_req_zone $http_x_forwarded_email zone=per_user:1m rate=2r/s;
+    limit_req_status 429;
+    server {
+        listen 8080;
+        server_name _;
+        root /usr/share/nginx/html;
+        add_header Cache-Control 'no-store' always;
+        add_header X-Content-Type-Options nosniff always;
+        add_header Referrer-Policy no-referrer always;
+        add_header X-Frame-Options DENY always;
+        add_header Permissions-Policy 'camera=(), microphone=(), geolocation=(), payment=()' always;
+        # React Flow/motion use dynamic inline styles, but inline scripts are forbidden.
+        add_header Content-Security-Policy "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'self'" always;
+        location = /healthz { return 200 'ok'; }
+        location ^~ /api/ {
+            limit_req zone=per_user burst=20 nodelay;
+            proxy_pass http://api:8000;
+            proxy_set_header Host ${BEACON_HOST};
+            # Always overwrite caller-supplied identity and gateway headers.
+            proxy_set_header X-Beacon-Identity $http_x_forwarded_email;
+            proxy_set_header X-Beacon-Gateway ${BEACON_GATEWAY_SECRET};
+            proxy_set_header X-Forwarded-Proto https;
+            proxy_set_header Authorization '';
+            proxy_set_header Cookie '';
+            proxy_set_header X-Forwarded-Access-Token '';
+            proxy_hide_header Content-Security-Policy;
+            proxy_hide_header Cache-Control;
+            proxy_hide_header X-Content-Type-Options;
+            proxy_hide_header Referrer-Policy;
+            proxy_hide_header X-Frame-Options;
+            proxy_hide_header Permissions-Policy;
+            proxy_connect_timeout 2s;
+            proxy_read_timeout 15s;
+            proxy_send_timeout 10s;
+            proxy_buffering off;
+        }
+        location ~ /\. { return 404; }
+        location ~* \.(?:map|env|pem|key|py|toml|lock)$ { return 404; }
+        location / { try_files $uri $uri/ /index.html; }
+    }
+}

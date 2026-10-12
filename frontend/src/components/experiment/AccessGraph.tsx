@@ -84,14 +84,14 @@ export default function AccessGraph({ record, cursor }: { record: RunRecord | nu
 
   return (
     <section className="access-graph-panel" aria-labelledby="access-graph-title">
-      <div className="panel-heading"><div><Network size={17} /><h2 id="access-graph-title">Inspect the access path</h2></div><span className="text-note">{record ? `Recorded simulation · event ${cursor + 1}/${record.events.length}` : 'Local architecture illustration'}</span></div>
+      <div className="panel-heading"><div><Network size={17} /><h2 id="access-graph-title">Access path</h2></div><span className="text-note">{record ? `Event ${cursor + 1} of ${record.events.length}` : 'Local preview'}</span></div>
       <div className="access-graph-canvas" role="region" aria-label="Interactive local access diagram">
         <ReactFlow<GraphNode> nodes={nodes} edges={styledEdges} nodeTypes={nodeTypes} onNodesChange={onNodesChange} onNodeClick={(_, node) => setSelected(node.id)} deleteKeyCode={null} fitView fitViewOptions={{ padding: 0.12 }} minZoom={0.25} maxZoom={1.5} nodesConnectable={false} edgesReconnectable={false} attributionPosition="bottom-left">
           <Background color="#d5e0ec" gap={20} size={1} /><Controls showInteractive={false} />
         </ReactFlow>
       </div>
-      <div className="graph-inspector" aria-live="polite"><span className="inspection-label">Selected node · dragging changes layout only</span><strong>{nodeDefinitions.find(node => node.id === selected)?.label}</strong><p>{descriptions[selected]}</p></div>
-      <details className="graph-text-alternative"><summary>Read the text version</summary><p>Question and policy → scripted assistant → fixed document tool → vulnerable or protected local profile → synthetic payroll. The graph reflects captured events through the selected timeline position. It does not show AWS activity.</p></details>
+      <div className="graph-inspector" aria-live="polite"><strong>{nodeDefinitions.find(node => node.id === selected)?.label}</strong><p>{descriptions[selected]}</p></div>
+      <details className="graph-text-alternative"><summary>Text version</summary><p>The question and policy go to the scripted assistant, which requests documents through the tool. The vulnerable profile can read payroll; the protected profile cannot. Moving nodes changes the layout, not permissions. This graph shows local events, not AWS activity.</p></details>
     </section>
   );
 }

@@ -1,6 +1,7 @@
 import { z } from 'zod';
+import { containsCredential } from './sensitive';
 
-export const CLEAN_POLICY = `Leave policy — fictional company
+export const CLEAN_POLICY = `Leave policy (fictional company)
 
 Employees receive 20 days of annual leave.
 Leave requests require manager approval.
@@ -16,8 +17,8 @@ export const utf8Bytes = (text: string) => new TextEncoder().encode(text).length
 const role = z.enum(['vulnerable', 'protected']);
 export const behaviorSchema = z.enum(['follow', 'ignore', 'retrieve_only']);
 export const targetSchema = z.enum(['both', 'vulnerable', 'protected']);
-const boundedPolicy = z.string().min(1).max(8192).refine(value => value.trim().length > 0 && utf8Bytes(value) <= 8192);
-const boundedQuestion = z.string().min(1).max(1024).refine(value => value.trim().length > 0 && utf8Bytes(value) <= 1024);
+const boundedPolicy = z.string().min(1).max(8192).refine(value => value.trim().length > 0 && utf8Bytes(value) <= 8192 && !containsCredential(value));
+const boundedQuestion = z.string().min(1).max(1024).refine(value => value.trim().length > 0 && utf8Bytes(value) <= 1024 && !containsCredential(value));
 export const simulationInputSchema = z.strictObject({
   mode: z.literal('simulation'), idempotency_key: z.uuid(),
   policy: boundedPolicy, question: boundedQuestion,
@@ -107,6 +108,7 @@ export type AuditEvent = z.infer<typeof eventSchema>;
 
 export async function validateRecord(value: unknown): Promise<RunRecord> {
   const record = runRecordSchema.parse(value);
+  if (containsCredential(JSON.stringify(record))) throw new Error('Replay contains possible credentials. Use synthetic content only.');
   const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(record.input.policy));
   const hash = Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('');
   if (hash !== record.document_hash) throw new Error('The captured document does not match its recorded hash.');
@@ -127,14 +129,14 @@ function codeBlock(value: string) {
 
 export function markdownReport(record: RunRecord, imported = false) {
   return [
-    '# Beacon — local simulation report',
+    '# Beacon local simulation report',
     '> Scripted fixture, not a real LLM. Local permissions, not AWS IAM. No AWS resources or paid inference were used.',
     imported ? '> Imported replay: file authenticity is unverified.' : '> Captured from the local Beacon API.',
     `Run: ${record.id}\n\nStarted: ${record.started_at}\n\nModel: ${record.model_id}\n\nDocument SHA-256: ${record.document_hash}`,
     '## Captured question', codeBlock(record.input.question),
     `## Scripted behavior\n\n${record.input.behavior}`,
     ...record.results.flatMap(result => [
-      `## ${result.role} — ${result.outcome}`, codeBlock(result.explanation),
+      `## ${result.role}: ${result.outcome}`, codeBlock(result.explanation),
       `Requested: ${result.payroll_requested}\n\nRetrieved: ${result.payroll_retrieved}\n\nReached scripted context: ${result.payroll_delivered_to_model}\n\nExposed in answer: ${result.payroll_exposed}`,
       codeBlock(result.answer),
     ]),

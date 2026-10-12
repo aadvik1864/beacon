@@ -2,6 +2,14 @@
 
 ## Implemented now
 
+The same simulation engine can also run behind private HTTPS/OIDC access. See
+[deployment](deployment.md) for the production boundary and launch gates. In that
+mode Caddy authenticates through OAuth2 Proxy, the private gateway overwrites
+identity headers, and the API independently checks its gateway key and allowlist.
+OIDC tokens stay in an encrypted, authenticated, private in-memory Redis store;
+only opaque HttpOnly session tickets reach the browser. Lab captures remain in
+short-lived, user-isolated API memory, not Redis or a database.
+
 ```text
 React + TypeScript + React Bits + React Flow (localhost:5173)
                  │ same-origin /api proxy

@@ -12,15 +12,17 @@ beforeEach(() => {
   }));
 });
 
-describe('interface scaffold', () => {
+function openMore() { fireEvent.click(screen.getByText('More', { exact: true })); }
+
+describe('Beacon interface', () => {
   it('brands Beacon and labels local execution without exposing AWS controls', () => {
     render(<App />);
     expect(screen.getByRole('link', { name: 'Beacon home' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Run comparison' })).toBeInTheDocument();
-    expect(screen.getByText('Live AWS requires setup, cost review, and approval')).toBeInTheDocument();
+    expect(screen.getByText('Local simulation. Scripted responses and synthetic data. No AWS calls.')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /Architecture/ }));
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Permissions decide.');
-    expect(screen.getByText('No model or AWS requests are running.')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Architecture');
+    expect(screen.getByText('Planned AWS setup. No resources are deployed.')).toBeInTheDocument();
     expect(screen.getAllByText('* Planned permissions, not observed results.')).toHaveLength(2);
     expect(screen.queryByRole('button', { name: /Run comparison/ })).not.toBeInTheDocument();
   });
@@ -47,10 +49,11 @@ describe('interface scaffold', () => {
 
   it('allows local component states without issuing extra requests', async () => {
     render(<App />);
+    openMore();
     fireEvent.click(screen.getByRole('button', { name: /Component bench/ }));
     fireEvent.click(screen.getByRole('button', { name: 'Failed' }));
     expect(screen.getByRole('button', { name: /Reset preview/ })).toBeInTheDocument();
-    expect(screen.getByText(/They do not run tools, contact AWS/)).toBeInTheDocument();
+    expect(screen.getByText('Visual previews only. No tools or AWS calls.')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /Reset preview/ }));
     expect(screen.getByRole('button', { name: 'Queued' })).toHaveAttribute('aria-pressed', 'true');
     await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
@@ -58,6 +61,7 @@ describe('interface scaffold', () => {
 
   it('scopes arrow navigation to the component list and leaves Tab alone', () => {
     render(<App />);
+    openMore();
     fireEvent.click(screen.getByRole('button', { name: /Component bench/ }));
     const list = screen.getByRole('listbox', { name: 'React Bits components' });
     fireEvent.keyDown(list, { key: 'ArrowDown' });
@@ -70,9 +74,10 @@ describe('interface scaffold', () => {
 
   it('opens and completes the accessible setup guide', async () => {
     render(<App />);
+    openMore();
     fireEvent.click(screen.getByRole('button', { name: /Quick guide/ }));
     const dialog = screen.getByRole('dialog');
-    expect(within(dialog).getByRole('heading', { name: 'How this lab will work' })).toBeInTheDocument();
+    expect(within(dialog).getByRole('heading', { name: 'Quick guide' })).toBeInTheDocument();
     fireEvent.click(within(dialog).getByRole('button', { name: 'Step 3: Evidence' }));
     fireEvent.click(within(dialog).getByRole('button', { name: /Finish guide/ }));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
@@ -80,6 +85,7 @@ describe('interface scaffold', () => {
 
   it('supports an explicit reduced-motion preference', () => {
     render(<App />);
+    openMore();
     const control = screen.getByRole('button', { name: /Reduce motion/ });
     fireEvent.click(control);
     expect(control).toHaveAttribute('aria-pressed', 'true');
@@ -88,15 +94,39 @@ describe('interface scaffold', () => {
 
   it('keeps the guide open through StrictMode effect replay', async () => {
     render(<StrictMode><App /></StrictMode>);
+    openMore();
     fireEvent.click(screen.getByRole('button', { name: /Quick guide/ }));
     await waitFor(() => expect(screen.getByRole('dialog')).toHaveAttribute('open'));
-    expect(screen.getByRole('heading', { name: 'How this lab will work' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Quick guide' })).toBeInTheDocument();
   });
 
   it('shows actual local API readiness without implying AWS readiness', async () => {
     render(<App />);
+    openMore();
     fireEvent.click(screen.getByRole('button', { name: /Local setup/ }));
-    await waitFor(() => expect(screen.getByText(/Connected · v0.2.0/)).toBeInTheDocument());
-    expect(screen.getByText('AWS resources or role switching')).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText('Connected (v0.2.0)')).toBeInTheDocument());
+    expect(screen.getByText('Runs on your machine. AWS and paid inference are disabled.')).toBeInTheDocument();
+  });
+
+  it('keeps optional tools out of the default workspace', () => {
+    render(<App />);
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Playground');
+    expect(screen.getByRole('status')).toHaveTextContent('No results yet');
+    expect(document.querySelector('.advanced-options')).not.toHaveAttribute('open');
+    expect(document.querySelector('.nav-more')).not.toHaveAttribute('open');
+    expect(screen.queryByRole('tablist')).not.toBeInTheDocument();
+    expect(screen.queryByText('Access diagram')).not.toBeInTheDocument();
+    expect(document.querySelector('.sidebar')).toBeNull();
+    expect(document.body.textContent).not.toMatch(/[—–]/);
+  });
+
+  it('reveals simulation options without changing defaults or making requests', async () => {
+    render(<App />);
+    fireEvent.click(screen.getByText('Options', { exact: true }));
+    expect(screen.getByLabelText('Simulation behavior')).toHaveValue('follow');
+    expect(screen.getByLabelText('Run target')).toHaveValue('both');
+    fireEvent.change(screen.getByLabelText('Run target'), { target: { value: 'protected' } });
+    expect(screen.getByRole('button', { name: 'Run protected' })).toBeInTheDocument();
+    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
   });
 });

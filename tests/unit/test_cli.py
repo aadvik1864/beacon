@@ -1,6 +1,8 @@
 import json
 from pathlib import Path
 
+import pytest
+
 from beacon.__main__ import main
 from beacon.fixtures import CLEAN_POLICY, INJECTED_POLICY, PAYROLL
 
@@ -11,6 +13,13 @@ def test_cli_summary_is_explicitly_local(capsys):
     assert "LOCAL SIMULATION" in output
     assert "vulnerable: EXPOSED" in output
     assert "protected: DENIED_BY_APP" in output
+
+
+def test_cli_help_uses_beacon_name(capsys):
+    with pytest.raises(SystemExit) as exit:
+        main(["--help"])
+    assert exit.value.code == 0
+    assert capsys.readouterr().out.startswith("usage: beacon ")
 
 
 def test_cli_json_is_an_importable_replay(capsys):

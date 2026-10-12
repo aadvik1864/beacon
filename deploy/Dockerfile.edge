@@ -1,0 +1,17 @@
+FROM golang:1.27.2-alpine@sha256:f92b6ef800e499660581efdabdf25d9d817a9d124eaf900924f0504e7e27e12d AS build
+ENV GOTOOLCHAIN=local GOFLAGS=-p=2 CGO_ENABLED=0
+RUN apk add --no-cache git
+WORKDIR /build
+# Pinned Caddy release commit, rebuilt with patched Go and x/net.
+RUN git init && git remote add origin https://github.com/caddyserver/caddy.git && git fetch --depth 1 origin 87c43dc4f54861ec7e54302cfb2ad3e34508b6dc && git checkout --detach FETCH_HEAD
+RUN go get golang.org/x/net@v0.60.0 && go mod verify && go build -trimpath -ldflags='-s -w' -o /out/caddy ./cmd/caddy
+# Preserve the exact verified annotated release tag in Go's VCS build metadata.
+# Without it, Go invents a v2.0.0 pseudo-version and scanners misidentify this release.
+RUN git update-ref refs/tags/v2.11.7 87c43dc4f54861ec7e54302cfb2ad3e34508b6dc && go build -trimpath -ldflags='-s -w' -o /out/caddy ./cmd/caddy
+
+FROM caddy:2-alpine@sha256:d8542f48d34a9cf4e4c11a478865229840e87e4c96ea3f439101f31a5d35f75f
+# Upstream grants a file capability for low ports. We use high container ports;
+# remove it so execution also works with cap_drop=ALL/no-new-privileges.
+RUN apk upgrade --no-cache && setcap -r /usr/bin/caddy
+COPY --from=build /out/caddy /usr/bin/caddy
+USER 10001:10001

@@ -39,13 +39,41 @@
 - [x] JSON/Markdown exports and strict, hash-checked simulation replay import.
 - [x] Same-engine local CLI for tests and maintenance.
 
+## Interface cleanup
+
+- [x] Compact header replaces the sidebar, breadcrumbs, and repeated status banners.
+- [x] Plain page titles and copy without decorative slogans or long dashes.
+- [x] Editor, question, run action, and answers remain visible; options and access details collapse.
+- [x] Inspection uses on-demand Events/Access path tabs; exports and metadata open separately.
+- [x] One empty state before execution; short simulation and imported-replay provenance retained.
+
+## React Bits interaction polish
+
+- [x] Adapted SpotlightCard, RubberSegment, and ClickSpark from the pinned upstream revision.
+- [x] Interactive document-access preview of local scope, explicitly not run evidence.
+- [x] Native spring selectors, cursor/focus lighting, click feedback, and captured-result reveal.
+- [x] HiDPI/demand-only spark rendering; no continuous decorative background loop.
+- [x] Keyboard equivalents, custom-template state, reduced motion, and retained attribution/license.
+
+## Private-hosted simulation hardening
+
+- [x] Fail-closed production settings, independent gateway/CSRF keys, and explicit SSO allowlist.
+- [x] Trusted gateway verification, user-bound expiring tokens, strict origins, redacted errors/logs.
+- [x] User-isolated retry captures, idle expiry, per-user deletion, bounded requests/rates/timeouts.
+- [x] Common credential-pattern guards in browser/API, without claiming general DLP.
+- [x] Private HTTPS/SSO containers, opaque cookies, encrypted server-side sessions, revoking logout.
+- [x] Non-root/read-only containers, private networks, file secrets, locked runtime/build context.
+- [x] Synthetic HTTPS OIDC/browser security checks, dependency audits, secret and image scan gates.
+- [ ] Real domain/provider/MFA setup and production launch checklist on the chosen host.
+
 ## Deferred deliberately — requires cloud approval
 
 - [ ] Real AWS resources, execution roles, Bedrock calls, and permission tests.
-- [ ] Cloud deployment, authentication, cost controls, and cleanup.
+- [ ] AWS cloud deployment, cloud cost controls, and cleanup.
 - [ ] Real S3/CloudTrail evidence and authenticated live AWS replay records.
 
 Local simulation outcomes do not prove real LLM susceptibility or AWS IAM
 enforcement. No AWS resources have been deployed and no inference costs have
-been incurred. The project directory remains `ai-cloud-security-lab`; the app
-and importable Python package are now Beacon (`beacon`).
+been incurred. The project directory, npm package, Python distribution, and
+importable Python package are named `beacon`. The UI and API documentation use
+Beacon as the display name.

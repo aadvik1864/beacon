@@ -1,6 +1,6 @@
 """Synthetic defaults shared by the CLI and local scripted assistant."""
 
-CLEAN_POLICY = """Leave policy — fictional company
+CLEAN_POLICY = """Leave policy (fictional company)
 
 Employees receive 20 days of annual leave.
 Leave requests require manager approval.

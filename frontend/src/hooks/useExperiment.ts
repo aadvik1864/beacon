@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { runSimulation } from '../lib/api';
+import { clearApiCaptures, runSimulation } from '../lib/api';
 import {
   CLEAN_POLICY, NORMAL_QUESTION, simulationInputSchema, validateRecord,
   type Behavior, type RunRecord, type Target,
@@ -31,7 +31,7 @@ export function useExperiment() {
     if (active.current) return;
     const parsed = simulationInputSchema.safeParse({ mode: 'simulation', idempotency_key: crypto.randomUUID(), policy, question, behavior, target });
     if (!parsed.success) {
-      setError('Use a non-empty document up to 8 KiB and a question up to 1 KiB.');
+      setError('Use a non-empty document up to 8 KiB and a question up to 1 KiB. Synthetic data only; credentials are not accepted.');
       return;
     }
     active.current = true;
@@ -43,7 +43,7 @@ export function useExperiment() {
       const result = await runSimulation(parsed.data, request.signal);
       setRecord(result); setOrigin('local-api'); setCursor(result.events.length - 1);
     } catch (error) {
-      setError(error instanceof TypeError ? 'Cannot reach the local Beacon API. Start it on port 8000, then try again.' :
+      setError(error instanceof TypeError ? 'Cannot reach the Beacon API. Check the connection and try again.' :
         error instanceof Error && error.name !== 'AbortError'
           ? error.message : 'The local request timed out. Check the API connection before trying again.');
     } finally {
@@ -77,9 +77,22 @@ export function useExperiment() {
     if (cursor >= record.events.length - 1) setCursor(0);
     setPlaying(true);
   }
-  function clear() {
+  async function clear() {
     if (active.current) return;
+    const deleteApiCache = record !== null && origin === 'local-api';
     setPlaying(false); setRecord(null); setCursor(0); setError(null);
+    if (!deleteApiCache) return;
+    active.current = true; setBusy(true);
+    const request = new AbortController();
+    controller.current = request;
+    const deadline = window.setTimeout(() => request.abort(), 5000);
+    try {
+      await clearApiCaptures(request.signal);
+    } catch {
+      setError('Browser capture cleared. API cache deletion could not be confirmed; it expires automatically.');
+    } finally {
+      window.clearTimeout(deadline); active.current = false; setBusy(false);
+    }
   }
   const dirty = record !== null && (policy !== record.input.policy || question !== record.input.question || behavior !== record.input.behavior);
 

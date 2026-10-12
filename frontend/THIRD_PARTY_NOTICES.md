@@ -1,7 +1,7 @@
 # React Bits attribution
 
 This application contains modified React Bits components by **David Haz**:
-https://reactbits.dev/ · https://github.com/DavidHDev/react-bits
+https://reactbits.dev/ and https://github.com/DavidHDev/react-bits
 
 Source revision: `f586a29d6b90a9bf8027b76e978a82230160b8c6`.
 
@@ -11,6 +11,9 @@ Source revision: `f586a29d6b90a9bf8027b76e978a82230160b8c6`.
 | AnimatedList.tsx | src/ts-tailwind/Components/AnimatedList/AnimatedList.tsx |
 | CallChip.tsx | src/ts-tailwind/Micro/CallChip/CallChip.tsx |
 | StatusMark.tsx | src/ts-tailwind/Micro/StatusMark/StatusMark.tsx |
+| SpotlightCard.tsx | src/ts-tailwind/Components/SpotlightCard/SpotlightCard.tsx |
+| RubberSegment.tsx | src/ts-tailwind/Micro/RubberSegment/RubberSegment.tsx |
+| ClickSpark.tsx | src/ts-tailwind/Animations/ClickSpark/ClickSpark.tsx |
 
 Modifications: light-workbench theming; semantic buttons and scoped keyboard
 navigation instead of global Tab interception; explicit reduced-motion controls;
@@ -21,6 +24,16 @@ removed: preview states are not measured requests or security evidence. The
 experiment view now uses CallChip/StatusMark for observed local outcomes and
 AnimatedList for recorded events, with empty filtered selection handling and
 contrast adjustments. These are still not AWS events.
+
+The main playground additionally uses SpotlightCard for pointer/focus lighting,
+RubberSegment for document/template controls, and ClickSpark on the run button.
+SpotlightCard is simplified to local events and CSS gradients, without ambient
+animation or global listeners. RubberSegment retains the leading/trailing-edge
+animation idea with native buttons, a custom/unselected state, and no drag gesture.
+ClickSpark has a HiDPI canvas, bounded particles, keyboard-click positioning,
+and a drawing loop that runs only while sparks exist. All three respect live
+system and explicit reduced-motion settings. The custom permission illustration
+shows configured local scopes, not observed access or AWS activity.
 
 Components are included as part of this application, not distributed as a
 standalone component package. See the complete retained license below.

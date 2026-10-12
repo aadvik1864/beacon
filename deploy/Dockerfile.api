@@ -1,0 +1,13 @@
+FROM python:3.12-alpine@sha256:1b668429b3511ab407d8e00648891631b0b1a4d7e15e3ca70f38ab5b91ad4ab4
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1 PYTHONPATH=/app/src BEACON_ENV=production OTEL_SDK_DISABLED=true
+WORKDIR /app
+COPY requirements.lock ./
+RUN pip install --require-hashes --only-binary=:all: --no-cache-dir -r requirements.lock
+COPY src/beacon ./src/beacon
+# Import the local source directly, avoiding unpinned PEP 517 build tooling.
+RUN pip uninstall --yes pip && adduser -D -u 10001 -H -s /sbin/nologin beacon
+USER 10001:10001
+EXPOSE 8000
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 CMD ["python", "-c", "from urllib.request import urlopen; urlopen('http://127.0.0.1:8000/healthz', timeout=2).read()"]
+# One worker is required for consistent process-local limits and idempotency.
+CMD ["python", "-m", "uvicorn", "beacon.api:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1", "--no-access-log", "--no-proxy-headers", "--no-server-header", "--limit-concurrency", "40", "--backlog", "64", "--timeout-keep-alive", "5", "--timeout-graceful-shutdown", "10"]
