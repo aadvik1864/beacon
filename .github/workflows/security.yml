@@ -40,6 +40,8 @@ jobs:
         run: .venv/bin/pip-audit -r requirements.lock --require-hashes --disable-pip
       - name: Backend and security regressions
         run: .venv/bin/python -m pytest
+      - name: Deployment navigation regressions
+        run: node --test tests/deployment/navigation.test.mjs
       - name: Frontend verification
         working-directory: frontend
         run: |
@@ -49,10 +51,14 @@ jobs:
           npm run build
           npx playwright install --with-deps chromium
           npm run test:e2e
-      - name: Verify private HTTPS/SSO deployment
+      - name: Build deployable images
+        if: ${{ !cancelled() }}
         run: |
           mkdir -p /tmp/opencode
-          .venv/bin/python scripts/test-deployment.py
+          .venv/bin/python scripts/test-deployment.py --build-only
+      - name: Verify private HTTPS/SSO deployment
+        run: .venv/bin/python scripts/test-deployment.py --skip-build
       - name: Gate deployable images on high/critical advisories
+        if: ${{ !cancelled() }}
         run: .venv/bin/python scripts/scan-images.py
       # Never publish browser traces, inputs, cookies, secrets, or private images.

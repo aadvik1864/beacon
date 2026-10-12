@@ -108,6 +108,7 @@ Choose an unused output filename if you do not want shell redirection to replace
 
 ```bash
 .venv/bin/python -m pytest
+node --test tests/deployment/navigation.test.mjs
 ```
 
 From `frontend/`:
@@ -142,6 +143,9 @@ request-protection mechanism, not user authentication. For hosting, use the
 separate [private HTTPS/SSO deployment](docs/deployment.md), complete its launch
 checklist, and keep the API/session store private. Production configuration fails
 closed without independent server secrets and an explicit user allowlist.
+Hosting also has an exact-commit release gate, tested-image manifest/rollback
+workflow, and read-only host checks. Real-provider acceptance and private alert
+delivery still need the chosen host and provider; nothing is launched by CI.
 AWS implementation needs
 explicit approval, region/model selection, cost review, fixed isolated roles,
 and a cleanup plan. Free-tier eligibility is not assumed.

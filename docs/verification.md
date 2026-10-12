@@ -8,8 +8,9 @@ and synthetic OIDC identities, not a real production provider or public site.
 
 | Check | Result |
 | --- | --- |
-| Python API/engine/CLI/security tests (`.venv/bin/python -m pytest`) | 94 passed |
-| React/schema/hook/API tests (`npm run test`) | 44 passed |
+| Python API/engine/CLI/security/release/monitor tests (`.venv/bin/python -m pytest`) | 133 passed |
+| React/schema/hook/API tests (`npm run test`) | 45 passed |
+| Bounded deployment readiness/navigation regressions (`node --test tests/deployment/navigation.test.mjs`) | 15 passed |
 | Browser tests (`npm run test:e2e`) | 36 passed across desktop/mobile |
 | TypeScript check and production build (`npm run build`) | Passed |
 | Automated axe WCAG checks | No violations in tested main views, open options, captured results, inspection, and setup guide |
@@ -24,12 +25,15 @@ and synthetic OIDC identities, not a real production provider or public site.
 
 Automated accessibility checks are not a full manual accessibility audit.
 The Python test run currently emits a third-party Starlette/httpx deprecation
-warning; all API tests pass. The build has a non-blocking chunk-size advisory
-for its roughly 529 kB main JavaScript bundle; the graph is loaded separately.
+warning; all API tests pass. Initial JavaScript is approximately 435 kB
+(137 kB gzip), down from 529 kB (163 kB gzip). The approximately 94 kB strict
+validation engine loads on the first run/import; the graph is loaded separately.
+The build no longer emits the large-chunk advisory. These sizes are build
+measurements, not real-host latency or Core Web Vitals results.
 
 ## Private deployment/security verification
 
-174 Python/frontend/browser tests pass, in addition to the container SSO smoke
+229 Python/frontend/browser/navigation tests pass, in addition to the container SSO smoke
 checks. Production requires independent private-file gateway/CSRF keys, a fixed
 HTTPS origin, and an explicit user allowlist; partial/invalid configuration fails
 closed. Tests cover authentication before body parsing, strict origin and fetch
@@ -49,6 +53,32 @@ script CSP, disabled production API docs, generic failures, and mobile layout.
 Container logs contain neither generated secrets, test email addresses, nor the
 private-input test marker. The fixture stack and its volumes are removed after
 testing. The preflight and key generator also have regression tests.
+
+The first hosted verification failed on a pre-login Chromium
+`ERR_NETWORK_CHANGED` after Docker networking started, despite passing backend
+and frontend checks. The fixture now waits for healthy OIDC discovery and
+anonymous API rejection, and retries only that read-only navigation error at
+most twice. Authentication/callback/POST/certificate/timeout checks remain strict.
+Fifteen isolated regression cases cover success, bounds, and fail-fast behavior.
+CI attempts image builds/scans even after earlier verification failures, without
+turning a failed verification into a release success.
+
+The built HTTPS/SSO browser checks also confirm that initial page loading does
+not fetch the validation chunk, a run does fetch it, and aborting that chunk
+produces an error without submitting a simulation or inventing a result.
+Existing browser workflows, replay/hash/credential guards, and accessibility
+checks remain passing.
+
+Release/monitor regressions require private exact-commit green CI with every
+security step passed, reject dirty/changed source or image identities, preserve
+existing mode-0600 manifests, and omit configuration/exception contents from
+operator output. Host-health tests use mocked TLS/container measurements, not a
+real production host. The manifest pins tested local image content IDs for
+`--no-build --pull never`; it is unsigned and is not a registry digest or build
+attestation. Real-host scheduling/notifications and rollback rehearsal remain
+operator acceptance work. Branch protection is unavailable on the current
+GitHub plan for this private repository, so the release gate is a documented
+operator control, not server-side enforcement.
 
 The image gate caught real high/critical advisories in the initial Debian,
 OAuth2 Proxy, Go, and Alpine dependencies. The deployable API uses a smaller

@@ -64,7 +64,11 @@
 - [x] Private HTTPS/SSO containers, opaque cookies, encrypted server-side sessions, revoking logout.
 - [x] Non-root/read-only containers, private networks, file secrets, locked runtime/build context.
 - [x] Synthetic HTTPS OIDC/browser security checks, dependency audits, secret and image scan gates.
+- [x] Bounded transient-navigation recovery, strict readiness, and scans attempted after verification failures.
+- [x] Exact-commit private CI release gate, tested local image manifest, rollback guidance, read-only host checks.
+- [x] On-demand strict frontend validation without accepting unvalidated submissions or captures.
 - [ ] Real domain/provider/MFA setup and production launch checklist on the chosen host.
+- [ ] Host scheduler/private alert integration, expected-load validation, and recovery rehearsal.
 
 ## Deferred deliberately — requires cloud approval
 

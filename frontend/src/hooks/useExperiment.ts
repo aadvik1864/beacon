@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { clearApiCaptures, runSimulation } from '../lib/api';
 import {
-  CLEAN_POLICY, NORMAL_QUESTION, simulationInputSchema, validateRecord,
+  CLEAN_POLICY, NORMAL_QUESTION, parseSimulationInput, validateRecord,
   type Behavior, type RunRecord, type Target,
 } from '../lib/experiment';
 
@@ -29,17 +29,19 @@ export function useExperiment() {
 
   async function run(target: Target) {
     if (active.current) return;
-    const parsed = simulationInputSchema.safeParse({ mode: 'simulation', idempotency_key: crypto.randomUUID(), policy, question, behavior, target });
-    if (!parsed.success) {
-      setError('Use a non-empty document up to 8 KiB and a question up to 1 KiB. Synthetic data only; credentials are not accepted.');
-      return;
-    }
+    const input = { mode: 'simulation', idempotency_key: crypto.randomUUID(), policy, question, behavior, target };
     active.current = true;
     setBusy(true); setError(null); setPlaying(false);
     const request = new AbortController();
     controller.current = request;
     const deadline = window.setTimeout(() => request.abort(), 10000);
     try {
+      const parsed = await parseSimulationInput(input);
+      request.signal.throwIfAborted();
+      if (!parsed.success) {
+        setError('Use a non-empty document up to 8 KiB and a question up to 1 KiB. Synthetic data only; credentials are not accepted.');
+        return;
+      }
       const result = await runSimulation(parsed.data, request.signal);
       setRecord(result); setOrigin('local-api'); setCursor(result.events.length - 1);
     } catch (error) {

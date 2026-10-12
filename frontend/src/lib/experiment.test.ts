@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { baselineRecord } from '../test/runFixture';
-import { CLEAN_POLICY, markdownReport, runRecordSchema, simulationInputSchema, utf8Bytes, validateRecord } from './experiment';
+import { CLEAN_POLICY, markdownReport, parseSimulationInput, utf8Bytes, validateRecord } from './experiment';
+import { runRecordSchema, simulationInputSchema } from './experimentValidation';
 
 describe('bounded simulation inputs', () => {
   it('counts bytes rather than only JavaScript characters', () => {
@@ -16,6 +17,12 @@ describe('bounded simulation inputs', () => {
     expect(simulationInputSchema.safeParse(input).success).toBe(true);
     expect(simulationInputSchema.safeParse({ ...input, mode: 'aws' }).success).toBe(false);
     expect(simulationInputSchema.safeParse({ ...input, role_arn: 'arbitrary' }).success).toBe(false);
+  });
+
+  it('uses the same strict schema through the lazy input validator', async () => {
+    const input = { mode: 'simulation', idempotency_key: crypto.randomUUID(), policy: CLEAN_POLICY, question: 'Leave allowance?', behavior: 'follow', target: 'both' };
+    expect(await parseSimulationInput(input)).toEqual(simulationInputSchema.safeParse(input));
+    expect((await parseSimulationInput({ ...input, role_arn: 'arbitrary' })).success).toBe(false);
   });
 });
 

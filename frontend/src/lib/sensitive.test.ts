@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { containsCredential } from './sensitive';
-import { simulationInputSchema } from './experiment';
+import { simulationInputSchema } from './experimentValidation';
 
 describe('credential-pattern guard', () => {
   it.each(['AKIA' + 'A'.repeat(16), '-----BEGIN PRIVATE KEY-----', 'ghp_' + 'a'.repeat(36), 'https://user:password@example.com'])('rejects a known credential pattern', value => {

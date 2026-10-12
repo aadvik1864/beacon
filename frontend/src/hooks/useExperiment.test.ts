@@ -17,8 +17,8 @@ describe('experiment controls', () => {
     const { result } = renderHook(() => useExperiment());
     let pending!: Promise<void>;
     act(() => { pending = result.current.run('protected'); void result.current.run('protected'); });
-    expect(runSimulation).toHaveBeenCalledTimes(1);
     expect(result.current.busy).toBe(true);
+    await waitFor(() => expect(runSimulation).toHaveBeenCalledTimes(1));
     await act(async () => { finish(record); await pending; });
     expect(result.current.record).toEqual(record);
     act(() => result.current.setPolicy('Employees receive 28 days of annual leave.'));

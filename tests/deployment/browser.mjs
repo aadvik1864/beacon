@@ -1,6 +1,7 @@
 import { chromium } from '../../frontend/node_modules/@playwright/test/index.mjs';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
+import { navigateToLogin, waitForPrivateStack } from './navigation.mjs';
 
 const base = 'https://localhost:38443';
 const browser = await chromium.launch();
@@ -13,9 +14,14 @@ async function context() {
 async function login(identity) {
   const ctx = await context();
   const page = await ctx.newPage();
-  await page.goto(base);
+  const loadedAssets = new Set();
+  page.on('request', request => {
+    const path = new URL(request.url()).pathname;
+    if (path.startsWith('/assets/')) loadedAssets.add(path);
+  });
+  await navigateToLogin(page, base);
   await page.getByRole('link', { name: identity, exact: true }).click();
-  return { ctx, page };
+  return { ctx, page, loadedAssets };
 }
 async function session(ctx) {
   const response = await ctx.request.get(base + '/api/session');
@@ -28,19 +34,21 @@ async function run(ctx, token, data, extra = {}) {
 
 try {
   const anonymous = await context();
+  await waitForPrivateStack(anonymous.request, base);
   for (const path of ['/api/health', '/api/session', '/api/capabilities']) {
     const response = await anonymous.request.get(base + path, { headers: { 'X-Beacon-Identity': 'alice@example.com', 'X-Forwarded-Email': 'alice@example.com', 'X-Beacon-Gateway': 'forged' } });
     assert.equal(response.status(), 401);
     assert.equal(response.headers()['cache-control'], 'no-store');
   }
   for (const path of ['/healthz', '/ping', '/ready']) assert.equal((await anonymous.request.get(base + path)).status(), 404);
-  const { ctx: alice, page } = await login('alice');
+  const { ctx: alice, page, loadedAssets } = await login('alice');
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
   await page.getByRole('button', { name: 'Run comparison' }).waitFor().catch(async error => {
     console.error('Synthetic SSO landing page:', await page.locator('body').innerText());
     throw error;
   });
+  assert.ok(![...loadedAssets].some(path => path.includes('experimentValidation-')), 'Validation must stay out of initial page loading');
   const health = await alice.request.get(base + '/api/health');
   assert.equal((await health.json()).access_mode, 'sso');
   const cookies = await alice.cookies();
@@ -82,6 +90,7 @@ try {
   assert.equal(await page.evaluate(() => window.beaconInlineScriptExecuted), undefined);
   await page.getByRole('button', { name: 'Run comparison' }).click();
   await page.getByRole('button', { name: 'Clear capture' }).waitFor();
+  assert.ok([...loadedAssets].some(path => path.includes('experimentValidation-')), 'A run must load the strict validator');
   await page.setViewportSize({ width: 390, height: 844 });
   assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
   assert.deepEqual(errors, []);
@@ -102,6 +111,16 @@ try {
   const tampered = await context();
   await tampered.addCookies([{ ...cookie, value: cookie.value.slice(0, -2) + 'xx' }]);
   assert.equal((await tampered.request.get(base + '/api/session')).status(), 401);
+  const { ctx: failedLoader, page: failedPage } = await login('alice');
+  await failedPage.getByRole('button', { name: 'Run comparison' }).waitFor();
+  await failedPage.route('**/assets/experimentValidation-*.js', route => route.abort('failed'));
+  let submissions = 0;
+  failedPage.on('request', request => { if (new URL(request.url()).pathname === '/api/simulations') submissions++; });
+  await failedPage.getByRole('button', { name: 'Run comparison' }).click();
+  await failedPage.getByRole('alert').waitFor();
+  assert.equal(submissions, 0, 'A missing validator must fail before submitting a simulation');
+  assert.equal(await failedPage.getByRole('button', { name: 'Clear capture' }).count(), 0);
+  await failedLoader.close();
   console.log('SSO, PKCE, nonce/signature/email checks, CSRF, ownership, logout, CSP, redaction, and responsive UI passed.');
 } finally {
   for (const ctx of contexts) await ctx.close();

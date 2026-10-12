@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { getApiHealth, runSimulation, clearApiCaptures } from './api';
 import { baselineRecord } from '../test/runFixture';
-import { simulationInputSchema } from './experiment';
+import { simulationInputSchema } from './experimentValidation';
 
 describe('local health response validation', () => {
   it('does not accept an unexpected cloud-enabled backend', async () => {

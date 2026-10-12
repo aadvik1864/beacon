@@ -35,11 +35,16 @@ def write(path, content):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--skip-build', action='store_true')
+    build = parser.add_mutually_exclusive_group()
+    build.add_argument('--skip-build', action='store_true')
+    build.add_argument('--build-only', action='store_true')
     args = parser.parse_args()
     if not args.skip_build:
         for component in ('api', 'gateway', 'edge', 'sso', 'sessions'):
             command('docker', 'build', '-f', f'deploy/Dockerfile.{component}', '-t', f'beacon-{component}:security-test', '.')
+    if args.build_only:
+        print('All five deployable images built. Security scans and deployment checks are still required.')
+        return
     bare_api = subprocess.run(['docker', 'run', '--rm', '--network', 'none', '--read-only', '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges:true', 'beacon-api:security-test'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, timeout=15)
     assert bare_api.returncode != 0 and 'ConfigurationError' in bare_api.stdout, 'API image must refuse startup without production secrets'
     with tempfile.TemporaryDirectory(prefix='beacon-sso-', dir='/tmp/opencode') as tmp:
@@ -88,7 +93,7 @@ def main():
         sso['command'] = [value.replace('https://localhost/oauth2/callback', 'https://localhost:38443/oauth2/callback') for value in sso['command']]
         sso['command'].append('--provider-ca-file=/fixture/oidc.crt')
         sso['volumes'] = [{'type': 'bind', 'source': str(directory / 'oidc.crt'), 'target': '/fixture/oidc.crt', 'read_only': True}]
-        sso['depends_on']['oidc'] = {'condition': 'service_started'}
+        sso['depends_on']['oidc'] = {'condition': 'service_healthy'}
         config['services']['oidc'] = {
             # Test issuer only: OpenSSL CLI signs synthetic ID tokens. Never ship
             # this image/server as part of the production deployment.
