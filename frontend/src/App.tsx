@@ -6,6 +6,7 @@ import { useMediaQuery } from './hooks/useMediaQuery';
 import { useExperiment } from './hooks/useExperiment';
 import { useTheme } from './hooks/useTheme';
 import { CLEAN_POLICY, INJECTED_POLICY, NORMAL_QUESTION } from './lib/experiment';
+import { isBrowserDemo } from './lib/executionMode';
 import Playground from './components/experiment/Playground';
 import SetupGuide from './components/SetupGuide';
 import HowItWorks from './components/HowItWorks';
@@ -38,7 +39,7 @@ export default function App() {
   const moreTrigger = useRef<HTMLElement>(null);
   const guideTrigger = useRef<HTMLElement | null>(null);
   const exampleApplied = useRef(false);
-  const api = useApiHealth();
+  const api = useApiHealth(!isBrowserDemo);
   const experiment = useExperiment();
   const appearance = useTheme();
 

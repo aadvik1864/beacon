@@ -41,6 +41,7 @@ def test_release_requires_green_ci_and_every_security_step(release, monkeypatch)
     {'conclusion': 'failure', 'older_green': True},
     {'missing': 'Gate deployable images on high/critical advisories'},
     {'missing': 'Verify private HTTPS/SSO deployment'},
+    {'missing': 'Verify public browser demo'},
 ])
 def test_release_fails_closed_on_ci_failures(release, monkeypatch, values):
     ci_fixture(release, monkeypatch, **values)

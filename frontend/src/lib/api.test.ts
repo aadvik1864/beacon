@@ -18,6 +18,12 @@ describe('local health response validation', () => {
 });
 
 describe('private API requests', () => {
+  it('rejects a browser-sourced result returned by the API', async () => {
+    const record = await baselineRecord();
+    const browserRecord = { ...record, execution_source: 'browser-simulation', events: record.events.map(event => ({ ...event, source: 'browser-simulation' })) };
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValueOnce({ ok: true, json: async () => ({ token }) }).mockResolvedValueOnce({ ok: true, json: async () => browserRecord }));
+    await expect(runSimulation(input(), new AbortController().signal)).rejects.toThrow('invalid simulation record');
+  });
   const token = 'synthetic-csrf-token-with-no-server-secret';
   const input = () => simulationInputSchema.parse({ mode: 'simulation', idempotency_key: crypto.randomUUID(), policy: 'Employees receive 20 days of leave.', question: 'Leave?', behavior: 'follow', target: 'protected' });
 

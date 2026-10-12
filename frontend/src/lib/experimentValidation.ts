@@ -2,6 +2,10 @@ import { z } from 'zod';
 import { containsCredential } from './sensitive';
 import { utf8Bytes } from './experiment';
 
+// Disable Zod's optional code-generation probe so validation never attempts
+// eval under the strict static-host CSP. All schema checks still run.
+z.config({ jitless: true });
+
 const role = z.enum(['vulnerable', 'protected']);
 export const behaviorSchema = z.enum(['follow', 'ignore', 'retrieve_only']);
 export const targetSchema = z.enum(['both', 'vulnerable', 'protected']);
@@ -17,7 +21,7 @@ export const eventSchema = z.strictObject({
   timestamp: z.iso.datetime({ offset: true }), offset_ms: z.number().nonnegative().finite(),
   actor: z.enum(['system', 'vulnerable', 'protected']),
   event_type: z.enum(['run_started', 'document_requested', 'document_retrieved', 'access_denied', 'document_delivered', 'model_decision', 'answer_generated', 'run_completed']),
-  summary: z.string().max(2048), source: z.literal('local-simulation'),
+  summary: z.string().max(2048), source: z.enum(['local-simulation', 'browser-simulation']),
   metadata: z.record(z.string().max(100), z.union([z.string().max(2048), z.number().int(), z.boolean()])),
 });
 export const resultSchema = z.strictObject({
@@ -43,6 +47,9 @@ export const resultSchema = z.strictObject({
 });
 export const runRecordSchema = z.strictObject({
   schema_version: z.literal(1), id: z.uuid(), mode: z.literal('simulation'), product: z.literal('Beacon'),
+  // Existing schema-v1 API reports omitted this field. Their event source still
+  // has to be local-simulation; absence cannot validate a browser event trace.
+  execution_source: z.enum(['local-api', 'browser-simulation']).optional(),
   started_at: z.iso.datetime({ offset: true }), completed_at: z.iso.datetime({ offset: true }),
   duration_ms: z.number().nonnegative().finite(), document_hash: z.string().regex(/^[a-f0-9]{64}$/),
   model_id: z.literal('scripted-fixture-v1'), model_is_live: z.literal(false), aws_used: z.literal(false),
@@ -54,7 +61,9 @@ export const runRecordSchema = z.strictObject({
     context.addIssue({ code: 'custom', message: 'Results must match the captured targets.' });
   }
   record.events.forEach((event, index) => {
+    const expectedSource = record.execution_source === 'browser-simulation' ? 'browser-simulation' : 'local-simulation';
     if (event.sequence !== index + 1 || event.id !== `${record.id}:${event.sequence}` ||
+        event.source !== expectedSource ||
         event.offset_ms > record.duration_ms || (index > 0 && event.offset_ms < record.events[index - 1].offset_ms) ||
         (event.actor !== 'system' && !expectedRoles.includes(event.actor))) {
       context.addIssue({ code: 'custom', message: 'Invalid event order or actor.' });

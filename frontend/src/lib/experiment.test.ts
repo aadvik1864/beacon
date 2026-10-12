@@ -27,6 +27,11 @@ describe('bounded simulation inputs', () => {
 });
 
 describe('untrusted replay validation', () => {
+  it('continues to accept old API reports without an execution_source field', async () => {
+    const { execution_source: _source, ...legacy } = await baselineRecord();
+    expect((await validateRecord(legacy)).execution_source).toBeUndefined();
+    expect(markdownReport(await validateRecord(legacy))).toContain('Captured from the local Beacon API');
+  });
   it('accepts a complete simulation record with an intact document hash', async () => {
     const record = await baselineRecord();
     expect(await validateRecord(record)).toEqual(record);

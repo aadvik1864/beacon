@@ -33,6 +33,7 @@ frontend/src/lib/*
 !frontend/src/test/
 frontend/src/test/*
 !frontend/src/test/*.ts
+!frontend/src/test/browserParity.json
 !frontend/src/components/
 frontend/src/components/*
 !frontend/src/components/*.tsx

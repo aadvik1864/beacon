@@ -66,7 +66,9 @@ export async function runSimulation(input: SimulationInput, signal: AbortSignal)
     throw new Error('The local simulation could not complete. Check the Beacon API terminal.');
   }
   try {
-    return await validateRecord(await response.json());
+    const record = await validateRecord(await response.json());
+    if (record.execution_source !== undefined && record.execution_source !== 'local-api') throw new Error('Unexpected execution source.');
+    return record;
   } catch {
     throw new Error('The API returned an invalid simulation record. No new result was accepted. Check that the Beacon frontend and API versions match.');
   }

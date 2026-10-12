@@ -39,7 +39,9 @@ jobs:
       - name: Audit pinned runtime dependencies
         run: .venv/bin/pip-audit -r requirements.lock --require-hashes --disable-pip
       - name: Backend and security regressions
-        run: .venv/bin/python -m pytest
+        run: |
+          .venv/bin/python -m pytest
+          .venv/bin/python scripts/check-browser-parity.py --check
       - name: Deployment navigation regressions
         run: node --test tests/deployment/navigation.test.mjs
       - name: Frontend verification
@@ -51,6 +53,9 @@ jobs:
           npm run build
           npx playwright install --with-deps chromium
           npm run test:e2e
+      - name: Verify public browser demo
+        working-directory: frontend
+        run: npm run test:e2e:demo
       - name: Build deployable images
         if: ${{ !cancelled() }}
         run: |

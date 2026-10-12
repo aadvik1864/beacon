@@ -1,9 +1,16 @@
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vitest/config';
+import { loadEnv } from 'vite';
+import { parseExecutionMode } from './src/lib/executionMode.ts';
 
-export default defineConfig({
+export default defineConfig(({ mode }) => {
+  // Invalid configuration fails the build instead of producing an accidental API demo.
+  const env = loadEnv(mode, process.cwd(), 'VITE_');
+  parseExecutionMode(process.env.VITE_BEACON_EXECUTION_MODE ?? env.VITE_BEACON_EXECUTION_MODE);
+  return {
   plugins: [react(), tailwindcss()],
+  build: { sourcemap: false },
   server: {
     host: '127.0.0.1',
     port: 5173,
@@ -22,4 +29,5 @@ export default defineConfig({
     restoreMocks: true,
     clearMocks: true,
   },
+  };
 });

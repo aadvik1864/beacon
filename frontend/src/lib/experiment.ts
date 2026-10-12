@@ -40,9 +40,11 @@ function codeBlock(value: string) {
 
 export function markdownReport(record: RunRecord, imported = false) {
   return [
-    '# Beacon local simulation report',
+    record.execution_source === 'browser-simulation' ? '# Beacon Browser simulation report' : '# Beacon local simulation report',
     '> Scripted fixture, not a real LLM. Local permissions, not AWS IAM. No AWS resources or paid inference were used.',
-    imported ? '> Imported replay: file authenticity is unverified.' : '> Captured from the local Beacon API.',
+    imported ? '> Imported replay: file authenticity is unverified.' :
+      record.execution_source === 'browser-simulation' ? '> Browser simulation: executed entirely in the browser with fictional data. Access limits are illustrative, not genuine AWS permission enforcement.' : '> Captured from the local Beacon API.',
+    `Execution source: ${record.execution_source === 'browser-simulation' ? 'Browser simulation' : 'Local Beacon API'}${imported ? ' (claimed by an unverified file)' : ''}`,
     `Run: ${record.id}\n\nStarted: ${record.started_at}\n\nModel: ${record.model_id}\n\nDocument SHA-256: ${record.document_hash}`,
     '## Captured question', codeBlock(record.input.question),
     `## Scripted behavior\n\n${record.input.behavior}`,

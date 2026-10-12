@@ -15,6 +15,7 @@ REQUIRED_STEPS = frozenset({
     'Scan Git history for credentials', 'Audit pinned runtime dependencies',
     'Backend and security regressions', 'Deployment navigation regressions',
     'Frontend verification', 'Build deployable images',
+    'Verify public browser demo',
     'Verify private HTTPS/SSO deployment', 'Gate deployable images on high/critical advisories',
 })
 

@@ -1,5 +1,12 @@
 # Beacon
 
+Beacon also supports an explicit public **Browser simulation** build with no
+backend or visitor accounts. It uses fictional data and scripted answers to
+illustrate access limits, not genuine AWS permission enforcement. Build it with
+`cd frontend && npm run build:demo`; see [the public-demo guide](docs/public-demo.md)
+for Cloudflare Pages settings and deployed-URL verification. The default API
+mode and invite-only deployment remain available.
+
 A local-first, interactive security lab for learning why assistants need limited
 file access. Add a hidden instruction to a fictional document and compare two
 access limits. Built with React, TypeScript, Vite, Tailwind, React Bits, and a

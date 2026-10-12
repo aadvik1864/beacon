@@ -16,6 +16,7 @@ import {
   downloadText, markdownReport, utf8Bytes, type Behavior, type Target,
 } from '../../lib/experiment';
 import type { useExperiment } from '../../hooks/useExperiment';
+import { isBrowserDemo } from '../../lib/executionMode';
 
 const AccessGraph = lazy(() => import('./AccessGraph'));
 
@@ -65,7 +66,7 @@ export default function Playground({ experiment, reduceMotion, onOpenGuide }: {
 
   return (
     <>
-      <section className="lab-introduction" aria-labelledby="lab-title"><div><h1 id="lab-title">Learn why AI needs access limits.</h1><p>Beacon is a hands-on security lab. Add a hidden instruction to a fictional document, then see what changes when an assistant can read too much.</p><p className="lab-safety">Scripted answers and fictional data. No live AI model or AWS calls.</p></div><div className="lab-introduction-actions"><MagneticButton className="button secondary" onClick={onOpenGuide}>Show me an example <ArrowRight size={16} /></MagneticButton><MagneticButton className="text-button" disabled={busy} onClick={() => fileInput.current?.click()}>Open a saved result</MagneticButton></div></section>
+      <section className="lab-introduction" aria-labelledby="lab-title"><div><h1 id="lab-title">Learn why AI needs access limits.</h1><p>Beacon is a hands-on security lab. Add a hidden instruction to a fictional document, then see what changes when an assistant can read too much.</p><p className="lab-safety">{isBrowserDemo ? 'Browser simulation. Scripted answers and fictional data stay in your browser. Access limits are illustrative, not genuine AWS permission enforcement.' : 'Scripted answers and fictional data. No live AI model or AWS calls.'}</p></div><div className="lab-introduction-actions"><MagneticButton className="button secondary" onClick={onOpenGuide}>Show me an example <ArrowRight size={16} /></MagneticButton><MagneticButton className="text-button" disabled={busy} onClick={() => fileInput.current?.click()}>Open a saved result</MagneticButton></div></section>
       <ol className="lab-steps" aria-label="How to try the lab"><li><span>1</span>Choose a document</li><li><span>2</span>Ask a question</li><li><span>3</span>Compare access</li></ol>
       <input ref={fileInput} className="sr-only" tabIndex={-1} type="file" accept="application/json,.json" aria-label="Import simulation replay" onChange={event => {
         const file = event.target.files?.[0];
@@ -112,7 +113,7 @@ export default function Playground({ experiment, reduceMotion, onOpenGuide }: {
         </section>
 
         <section className="comparison-panel" aria-labelledby="comparison-title">
-          <div className="comparison-heading"><h2 id="comparison-title">{record ? 'Your results' : 'What you are comparing'}</h2>{record && <span className="capture-source">{origin === 'imported' ? 'Imported result. Source not verified.' : 'Recorded simulation'}</span>}</div>
+          <div className="comparison-heading"><h2 id="comparison-title">{record ? 'Your results' : 'What you are comparing'}</h2>{record && <span className="capture-source">{origin === 'imported' ? `Imported result. Source not verified.${record.execution_source === 'browser-simulation' ? ' Claimed Browser simulation.' : ''}` : origin === 'browser-simulation' ? 'Browser simulation' : 'Recorded simulation'}</span>}</div>
           {dirty && <p className="draft-warning" role="status">Draft changed. Run again to update these results.</p>}
           {record ? <>
             <motion.div className="result-lanes" key={record.id} initial={{ opacity: reduceMotion || systemReduced ? 1 : 0.4 }} animate={{ opacity: 1 }} transition={{ duration: reduceMotion || systemReduced ? 0 : 0.25 }}>

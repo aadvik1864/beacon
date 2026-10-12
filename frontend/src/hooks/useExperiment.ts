@@ -1,16 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
 import { clearApiCaptures, runSimulation } from '../lib/api';
+import { executionMode, type ExecutionMode } from '../lib/executionMode';
 import {
   CLEAN_POLICY, NORMAL_QUESTION, parseSimulationInput, validateRecord,
   type Behavior, type RunRecord, type Target,
 } from '../lib/experiment';
 
-export function useExperiment() {
+export function useExperiment(mode: ExecutionMode = executionMode) {
   const [policy, setPolicy] = useState(CLEAN_POLICY);
   const [question, setQuestion] = useState(NORMAL_QUESTION);
   const [behavior, setBehavior] = useState<Behavior>('follow');
   const [record, setRecord] = useState<RunRecord | null>(null);
-  const [origin, setOrigin] = useState<'local-api' | 'imported'>('local-api');
+  const [origin, setOrigin] = useState<'local-api' | 'browser-simulation' | 'imported'>('local-api');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [cursor, setCursor] = useState(0);
@@ -42,12 +43,15 @@ export function useExperiment() {
         setError('Use a non-empty document up to 8 KiB and a question up to 1 KiB. Synthetic data only; credentials are not accepted.');
         return;
       }
-      const result = await runSimulation(parsed.data, request.signal);
-      setRecord(result); setOrigin('local-api'); setCursor(result.events.length - 1);
+      const result = mode === 'browser-demo'
+        ? await (await import('../lib/browserSimulation')).runBrowserSimulation(parsed.data, request.signal)
+        : await runSimulation(parsed.data, request.signal);
+      request.signal.throwIfAborted();
+      setRecord(result); setOrigin(mode === 'browser-demo' ? 'browser-simulation' : 'local-api'); setCursor(result.events.length - 1);
     } catch (error) {
-      setError(error instanceof TypeError ? 'Cannot reach the Beacon API. Check the connection and try again.' :
+      setError(error instanceof TypeError ? (mode === 'browser-demo' ? 'The browser simulation could not complete. Try reloading this page.' : 'Cannot reach the Beacon API. Check the connection and try again.') :
         error instanceof Error && error.name !== 'AbortError'
-          ? error.message : 'The local request timed out. Check the API connection before trying again.');
+          ? error.message : mode === 'browser-demo' ? 'The browser simulation was interrupted. Try again.' : 'The local request timed out. Check the API connection before trying again.');
     } finally {
       window.clearTimeout(deadline); active.current = false; setBusy(false);
     }

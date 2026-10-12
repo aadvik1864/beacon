@@ -10,6 +10,17 @@ vi.mock('../lib/api', () => ({ runSimulation: vi.fn(), clearApiCaptures: vi.fn()
 beforeEach(() => { vi.mocked(runSimulation).mockReset(); });
 
 describe('experiment controls', () => {
+  it('runs and clears explicit browser captures without contacting the API', async () => {
+    const { result } = renderHook(() => useExperiment('browser-demo'));
+    await act(() => result.current.run('both'));
+    expect(result.current.origin).toBe('browser-simulation');
+    expect(result.current.record?.execution_source).toBe('browser-simulation');
+    expect(runSimulation).not.toHaveBeenCalled();
+    await act(() => result.current.clear());
+    expect(result.current.record).toBeNull();
+    expect(clearApiCaptures).not.toHaveBeenCalled();
+  });
+
   it('blocks overlapping submissions and captures immutable inputs', async () => {
     const record = await baselineRecord();
     let finish!: (record: RunRecord) => void;

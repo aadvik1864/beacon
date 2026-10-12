@@ -7,7 +7,7 @@ export async function baselineRecord(): Promise<RunRecord> {
   const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(CLEAN_POLICY));
   const eventTypes: AuditEvent['event_type'][] = ['run_started', 'document_requested', 'document_retrieved', 'document_delivered', 'model_decision', 'answer_generated', 'run_completed'];
   return {
-    schema_version: 1, id, mode: 'simulation', product: 'Beacon',
+    schema_version: 1, id, mode: 'simulation', product: 'Beacon', execution_source: 'local-api',
     started_at: timestamp, completed_at: timestamp, duration_ms: 8,
     document_hash: Array.from(new Uint8Array(hash), byte => byte.toString(16).padStart(2, '0')).join(''),
     model_id: 'scripted-fixture-v1', model_is_live: false, aws_used: false,
