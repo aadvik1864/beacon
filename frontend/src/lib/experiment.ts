@@ -27,8 +27,8 @@ export async function validateRecord(value: unknown): Promise<RunRecord> {
 }
 
 const labels: Record<AssistantResult['outcome'], string> = {
-  NOT_TRIGGERED: 'Not triggered', DENIED_BY_APP: 'Blocked locally',
-  RETRIEVED_NOT_DISCLOSED: 'Retrieved, not disclosed', EXPOSED: 'Synthetic data exposed', ERROR: 'Run error',
+  NOT_TRIGGERED: 'No private file requested', DENIED_BY_APP: 'Private file blocked',
+  RETRIEVED_NOT_DISCLOSED: 'Private file read, but not shown', EXPOSED: 'Fictional data exposed', ERROR: 'Run error',
 };
 export const outcomeLabel = (outcome: AssistantResult['outcome']) => labels[outcome];
 

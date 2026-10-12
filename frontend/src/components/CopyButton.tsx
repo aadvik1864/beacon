@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Check, Copy } from 'lucide-react';
+import MagneticButton from './react-bits/MagneticButton';
 
 export default function CopyButton({ text, label = 'Copy command' }: { text: string; label?: string }) {
   const [state, setState] = useState<'idle' | 'copied' | 'unavailable'>('idle');
@@ -16,9 +17,9 @@ export default function CopyButton({ text, label = 'Copy command' }: { text: str
     timeout.current = window.setTimeout(() => setState('idle'), 2500);
   }
   return (
-    <button className="copy-button" type="button" aria-label={label} onClick={() => void copy()}>
+    <MagneticButton className="copy-button" type="button" aria-label={label} onClick={() => void copy()}>
       {state === 'copied' ? <Check size={14} /> : <Copy size={14} />}
       <span role="status">{state === 'copied' ? 'Copied' : state === 'unavailable' ? 'Select text to copy' : 'Copy'}</span>
-    </button>
+    </MagneticButton>
   );
 }

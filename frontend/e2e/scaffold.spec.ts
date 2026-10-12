@@ -17,21 +17,28 @@ test.beforeEach(async ({ page }) => {
   await expect(page.getByRole('link', { name: 'Beacon home' })).toBeVisible({ timeout: 15000 });
 });
 
-test('workbench remains honest and responsive', async ({ page }) => {
-  await navigate(page, /Architecture/);
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Architecture');
+test('explanations and planned architecture remain honest and responsive', async ({ page }) => {
+  await navigate(page, /How it works/);
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('How it works');
+  await page.getByRole('button', { name: /Add a misleading instruction/ }).click();
+  await expect(page.locator('.explanation-detail')).toContainText('prompt injection');
+  await page.getByText('Where AWS fits in a future version').click();
   await expect(page.getByText('Planned AWS setup. No resources are deployed.')).toBeVisible();
   await page.getByRole('button', { name: /AI assistant/ }).click();
-  await expect(page.getByText('The model proposes an action.')).toBeVisible();
-  await page.getByRole('button', { name: /Synthetic payroll/ }).click();
-  await expect(page.getByText('private/payroll.csv')).toBeVisible();
+  await expect(page.getByText(/It would not hold AWS credentials or fetch files directly/)).toBeVisible();
+  await page.getByRole('button', { name: 'Too much access role' }).click();
+  await expect(page.getByText(/No other buckets, permission changes, or role switching/)).toBeVisible();
+  await page.getByRole('button', { name: /Fictional payroll/ }).click();
+  await expect(page.getByRole('button', { name: 'private/payroll.csv' })).toBeVisible();
+  await page.getByRole('button', { name: 'private/payroll.csv' }).click();
+  await expect(page.getByText('No real employee information.')).not.toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
 
 test('React Bits component preview is interactive without cloud requests', async ({ page }) => {
   const requests: string[] = [];
   page.on('request', request => { if (request.url().includes('/api/')) requests.push(request.url()); });
-  await navigate(page, /Component bench/);
+  await navigate(page, /Interaction studio/);
   await page.getByRole('button', { name: 'Failed', exact: true }).click();
   await page.getByRole('button', { name: /Reset preview/ }).click();
   await expect(page.getByRole('button', { name: 'Queued', exact: true })).toHaveAttribute('aria-pressed', 'true');
@@ -45,17 +52,17 @@ test('React Bits component preview is interactive without cloud requests', async
 });
 
 test('guide supports step navigation and Escape dismissal', async ({ page }) => {
-  await navigate(page, /Quick guide/);
-  const dialog = page.getByRole('dialog', { name: 'Quick guide' });
+  await navigate(page, /^Walkthrough$/);
+  const dialog = page.getByRole('dialog', { name: 'A quick walkthrough' });
   await expect(dialog).toBeVisible();
-  await dialog.getByRole('button', { name: 'Step 2: Permissions' }).click();
-  await expect(dialog.getByRole('heading', { name: 'Compare access' })).toBeVisible();
+  await dialog.getByRole('button', { name: 'Step 2: Access' }).click();
+  await expect(dialog.getByRole('heading', { name: 'Compare file access' })).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(dialog).not.toBeVisible();
 });
 
 test('local setup displays health and keeps cloud disabled', async ({ page }) => {
-  await navigate(page, /Local setup/);
+  await navigate(page, /Run locally/);
   await expect(page.getByText('Connected (v0.2.0)')).toBeVisible();
   await expect(page.getByText('Runs on your machine. AWS and paid inference are disabled.')).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
@@ -65,7 +72,7 @@ test('respects reduced motion and has no browser errors', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
   await page.emulateMedia({ reducedMotion: 'reduce' });
-  await navigate(page, /Component bench/);
+  await navigate(page, /Interaction studio/);
   await page.getByRole('option', { name: /StatusMark/ }).click();
   await page.getByRole('button', { name: 'Running', exact: true }).click();
   await expect(page.locator('.bits-status-mark')).toHaveAttribute('data-reduced', '');
@@ -89,23 +96,23 @@ test('secondary navigation opens on demand and Escape returns focus', async ({ p
   } else {
     const more = page.getByText('More', { exact: true });
     await more.click();
-    await expect(page.getByRole('button', { name: 'Local setup' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Run locally' })).toBeVisible();
     await page.keyboard.press('Escape');
-    await expect(page.getByRole('button', { name: 'Local setup' })).not.toBeVisible();
+    await expect(page.getByRole('button', { name: 'Run locally' })).not.toBeVisible();
     await expect(more).toBeFocused();
   }
 });
 
 test('main views pass automated WCAG checks', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
-  for (const name of [null, /Architecture/, /Component bench/, /Local setup/]) {
+  for (const name of [null, /How it works/, /Interaction studio/, /Run locally/]) {
     if (name) await navigate(page, name);
     await page.evaluate(() => document.fonts.ready);
     const result = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
     expect(result.violations).toEqual([]);
   }
-  await navigate(page, /Quick guide/);
-  const guide = page.getByRole('dialog', { name: 'Quick guide' });
+  await navigate(page, /^Walkthrough$/);
+  const guide = page.getByRole('dialog', { name: 'A quick walkthrough' });
   await expect(guide).toBeVisible();
   const guideResult = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
   expect(guideResult.violations).toEqual([]);

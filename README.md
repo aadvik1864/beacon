@@ -1,8 +1,10 @@
 # Beacon
 
-A local-first, interactive workbench for studying prompt injection and AWS
-least privilege. Built with React, TypeScript, Vite, Tailwind, React Bits, and
-a small Python/FastAPI backend.
+A local-first, interactive security lab for learning why assistants need limited
+file access. Add a hidden instruction to a fictional document and compare two
+access limits. Built with React, TypeScript, Vite, Tailwind, React Bits, and a
+small Python/FastAPI backend. Responses are scripted; live models and AWS calls
+are disabled.
 
 The project folder, npm package, Python distribution, and Python module are all
 named `beacon`. The GitHub repository is `aadvik1864/beacon` and remains private.
@@ -12,13 +14,18 @@ named `beacon`. The GitHub repository is `aadvik1864/beacon` and remains private
 Beacon **v0.2** includes the interface foundation and a complete local experiment flow:
 
 - React application and session-protected local Python simulation API.
+- Beginner-friendly introduction, selectable explanations, and a practical
+  walkthrough that prepares examples without running them.
+- Persistent light/dark themes, device preference support, and same-origin
+  pre-paint theme loading compatible with the private-hosted security policy.
 - Attack document editor, clean/attack presets, diff view, and question composer.
 - Paired vulnerable/protected results with separately observed retrieval and disclosure.
 - Interactive React Flow access graph, filtered event trace, and replay controls.
 - Validated JSON replay import and JSON/Markdown report export.
 - Adapted React Bits Stepper, AnimatedList, CallChip, StatusMark, SpotlightCard,
-  RubberSegment, and ClickSpark components. The playground uses them for document
-  selection, pointer/focus lighting, run feedback, and captured outcomes.
+  RubberSegment, ClickSpark, and Magnet components. The lab uses them for document
+  selection, pointer/focus lighting, bounded attraction/repulsion, run feedback,
+  and captured outcomes. Touch and reduced motion keep static controls.
 - Interactive role/document explanations, setup walkthrough, and component bench.
 - Local simulation CLI, keyboard access, reduced motion, local fonts, and automated tests.
 - Private HTTPS/SSO deployment, user-isolated API captures, expiring CSRF tokens,

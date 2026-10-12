@@ -15,13 +15,20 @@ async function login(identity) {
   const ctx = await context();
   const page = await ctx.newPage();
   const loadedAssets = new Set();
+  const errors = [];
+  const failedAssets = [];
+  page.on('pageerror', error => errors.push(error.message));
+  page.on('requestfailed', request => {
+    const path = new URL(request.url()).pathname;
+    if (path.startsWith('/assets/') || path === '/theme.js') failedAssets.push({ path, error: request.failure()?.errorText });
+  });
   page.on('request', request => {
     const path = new URL(request.url()).pathname;
     if (path.startsWith('/assets/')) loadedAssets.add(path);
   });
   await navigateToLogin(page, base);
   await page.getByRole('link', { name: identity, exact: true }).click();
-  return { ctx, page, loadedAssets };
+  return { ctx, page, loadedAssets, errors, failedAssets };
 }
 async function session(ctx) {
   const response = await ctx.request.get(base + '/api/session');
@@ -41,14 +48,22 @@ try {
     assert.equal(response.headers()['cache-control'], 'no-store');
   }
   for (const path of ['/healthz', '/ping', '/ready']) assert.equal((await anonymous.request.get(base + path)).status(), 404);
-  const { ctx: alice, page, loadedAssets } = await login('alice');
-  const errors = [];
-  page.on('pageerror', error => errors.push(error.message));
+  const { ctx: alice, page, loadedAssets, errors, failedAssets } = await login('alice');
   await page.getByRole('button', { name: 'Run comparison' }).waitFor().catch(async error => {
     console.error('Synthetic SSO landing page:', await page.locator('body').innerText());
+    console.error('Synthetic browser load failures:', { errors, failedAssets });
     throw error;
   });
   assert.ok(![...loadedAssets].some(path => path.includes('experimentValidation-')), 'Validation must stay out of initial page loading');
+  const themeScript = await alice.request.get(base + '/theme.js');
+  assert.equal(themeScript.status(), 200);
+  assert.match(themeScript.headers()['content-type'], /javascript/);
+  await page.getByRole('button', { name: 'Switch to dark mode' }).click();
+  assert.equal(await page.locator('html').getAttribute('data-theme'), 'dark');
+  await page.reload();
+  await page.getByRole('button', { name: 'Switch to light mode' }).waitFor();
+  assert.equal(await page.locator('html').getAttribute('data-theme'), 'dark');
+  assert.deepEqual(await page.evaluate(() => Object.keys(localStorage)), ['beacon.theme']);
   const health = await alice.request.get(base + '/api/health');
   assert.equal((await health.json()).access_mode, 'sso');
   const cookies = await alice.cookies();

@@ -4,6 +4,7 @@ import RubberSegment from './RubberSegment';
 import SpotlightCard from './SpotlightCard';
 import ClickSpark from './ClickSpark';
 import PermissionPreview from '../experiment/PermissionPreview';
+import MagneticButton, { InteractionMotion } from './MagneticButton';
 
 const items = [{ value: 'clean', label: 'Clean' }, { value: 'attack', label: 'Attack example' }];
 
@@ -47,12 +48,12 @@ describe('React Bits interactions', () => {
 
   it('makes the preview interactive without running an experiment', () => {
     render(<PermissionPreview busy={false} reduceMotion />);
-    expect(screen.getByText('Only the vulnerable profile can read payroll.')).toBeInTheDocument();
+    expect(screen.getByText('Only the version with too much access can read payroll.')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Preview leave policy access' }));
-    expect(screen.getByText('Both profiles can read the leave policy.')).toBeInTheDocument();
-    expect(screen.getAllByText('Allowed by profile')).toHaveLength(2);
-    expect(screen.queryByText('Blocked locally')).not.toBeInTheDocument();
-    expect(screen.getByRole('status')).toHaveTextContent('scope preview, not evidence');
+    expect(screen.getByText('Both versions can read the leave policy.')).toBeInTheDocument();
+    expect(screen.getAllByText('Can read this file')).toHaveLength(2);
+    expect(screen.queryByText('Private file blocked')).not.toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent('illustration, not a result');
   });
 
   it('turns spotlight tracking off for reduced motion', () => {
@@ -80,5 +81,17 @@ describe('React Bits interactions', () => {
     expect(click).toHaveBeenCalledOnce();
     expect(container.firstElementChild).toHaveAttribute('data-reduced');
     expect(container.querySelector('canvas')).toHaveAttribute('aria-hidden', 'true');
+  });
+
+  it('keeps magnetic controls native and static for reduced motion and coarse pointers', () => {
+    const click = vi.fn();
+    render(<InteractionMotion.Provider value><MagneticButton onClick={click}>Attract</MagneticButton><MagneticButton repel disabled>Repel</MagneticButton></InteractionMotion.Provider>);
+    const button = screen.getByRole('button', { name: 'Attract' });
+    fireEvent.pointerMove(button, { clientX: 70, clientY: 40, pointerType: 'mouse' });
+    fireEvent.click(button);
+    expect(button).toHaveAttribute('data-motion-static', 'true');
+    expect(click).toHaveBeenCalledOnce();
+    expect(screen.getByRole('button', { name: 'Repel' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Repel' })).toHaveAttribute('data-magnetic', 'repel');
   });
 });

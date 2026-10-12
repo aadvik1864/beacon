@@ -17,4 +17,4 @@ def test_package_manifests_share_beacon_name():
 
 
 def test_browser_title_uses_beacon_name():
-    assert "<title>Beacon</title>" in (ROOT / "frontend/index.html").read_text()
+    assert "<title>Beacon | An interactive AI safety lab</title>" in (ROOT / "frontend/index.html").read_text()

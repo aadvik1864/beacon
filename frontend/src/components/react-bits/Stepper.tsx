@@ -5,8 +5,9 @@
  * License and modification notes: /THIRD_PARTY_NOTICES.md
  */
 import { Children, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
-import { AnimatePresence, motion, useReducedMotion, type Variants } from 'motion/react';
+import { AnimatePresence, motion, useIsPresent, useReducedMotion, type Variants } from 'motion/react';
 import { ArrowLeft, ArrowRight, Check } from 'lucide-react';
+import MagneticButton from './MagneticButton';
 
 interface StepperProps {
   children: ReactNode;
@@ -86,16 +87,16 @@ export default function Stepper({
       <div className="stepper-footer">
         <span className="muted">Step {currentStep} of {totalSteps}</span>
         <div className="button-group">
-          <button className="button secondary small" disabled={currentStep === 1} onClick={() => updateStep(currentStep - 1)}>
+          <MagneticButton className="button secondary small" disabled={currentStep === 1} onClick={() => updateStep(currentStep - 1)}>
             <ArrowLeft size={15} /> Back
-          </button>
-          <button
+          </MagneticButton>
+          <MagneticButton
             className="button primary small"
             onClick={() => currentStep === totalSteps ? onFinalStepCompleted?.() : updateStep(currentStep + 1)}
           >
             {currentStep === totalSteps ? 'Finish guide' : 'Continue'}
             {currentStep === totalSteps ? <Check size={15} /> : <ArrowRight size={15} />}
-          </button>
+          </MagneticButton>
         </div>
       </div>
     </div>
@@ -131,15 +132,16 @@ function SlideTransition({ children, direction, reduced, onHeightReady }: {
   onHeightReady: (height: number) => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
+  const present = useIsPresent();
   useLayoutEffect(() => {
     const element = ref.current;
-    if (!element) return;
+    if (!element || !present) return;
     const measure = () => onHeightReady(element.offsetHeight);
     measure();
     const observer = new ResizeObserver(measure);
     observer.observe(element);
     return () => observer.disconnect();
-  }, [onHeightReady]);
+  }, [onHeightReady, present]);
   return (
     <motion.div
       ref={ref}
@@ -150,6 +152,8 @@ function SlideTransition({ children, direction, reduced, onHeightReady }: {
       exit={reduced ? undefined : 'exit'}
       transition={{ duration: reduced ? 0 : 0.2 }}
       className="step-slide"
+      inert={!present}
+      aria-hidden={!present || undefined}
     >
       {children}
     </motion.div>

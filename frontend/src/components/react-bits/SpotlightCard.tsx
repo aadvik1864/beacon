@@ -13,7 +13,7 @@ type SpotlightCardProps = HTMLAttributes<HTMLDivElement> & {
   reduceMotion?: boolean;
 };
 
-export default function SpotlightCard({ children, className = '', style, spotlightColor = '#2458d3', spotlightSize = 280, reduceMotion = false, ...props }: SpotlightCardProps) {
+export default function SpotlightCard({ children, className = '', style, spotlightColor = 'var(--signal)', spotlightSize = 280, reduceMotion = false, ...props }: SpotlightCardProps) {
   const root = useRef<HTMLDivElement>(null);
   const systemReduced = useMediaQuery('(prefers-reduced-motion: reduce)');
   const reduced = reduceMotion || Boolean(systemReduced);

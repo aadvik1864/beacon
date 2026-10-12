@@ -9,7 +9,7 @@
 
 ## Step 2 — Visual direction
 
-- [x] Light steel-blue workbench with shared-to-split architecture.
+- [x] Porcelain/indigo workspace with iris controls and a shared-to-split access illustration.
 - [x] Design tokens and locally served IBM Plex fonts.
 - [x] Responsive layouts, status text/icons, visible focus, reduced motion.
 
@@ -54,6 +54,19 @@
 - [x] Native spring selectors, cursor/focus lighting, click feedback, and captured-result reveal.
 - [x] HiDPI/demand-only spark rendering; no continuous decorative background loop.
 - [x] Keyboard equivalents, custom-template state, reduced motion, and retained attribution/license.
+
+## Beginner-friendly redesign
+
+- [x] Immediate plain-language introduction and a practical three-step walkthrough.
+- [x] Interactive hidden-instruction example that prepares inputs without executing them.
+- [x] Clear Too much access / Limited access labels and separate file-reading/disclosure results.
+- [x] Persistent light/dark/device themes, cross-tab synchronization, and safe storage fallback.
+- [x] Same-origin pre-paint theme bootstrap compatible with the private-hosted script policy.
+- [x] Reusable, bounded MagneticButton attraction/repulsion with stationary hit areas.
+- [x] Shared interactions across navigation, guides, documents, copying, exports, and replay.
+- [x] Mobile and reduced-motion alternatives, modal focus return, inert exiting guide steps.
+- [x] Direct links, browser history, page titles, and plain-language search metadata.
+- [x] Existing planned AWS inspections preserved under an explicitly labeled collapsed section.
 
 ## Private-hosted simulation hardening
 

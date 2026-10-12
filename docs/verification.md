@@ -9,11 +9,11 @@ and synthetic OIDC identities, not a real production provider or public site.
 | Check | Result |
 | --- | --- |
 | Python API/engine/CLI/security/release/monitor tests (`.venv/bin/python -m pytest`) | 133 passed |
-| React/schema/hook/API tests (`npm run test`) | 45 passed |
+| React/schema/hook/API/theme tests (`npm run test`) | 53 passed |
 | Bounded deployment readiness/navigation regressions (`node --test tests/deployment/navigation.test.mjs`) | 15 passed |
-| Browser tests (`npm run test:e2e`) | 36 passed across desktop/mobile |
+| Browser tests (`npm run test:e2e`) | 56 passed across desktop/mobile |
 | TypeScript check and production build (`npm run build`) | Passed |
-| Automated axe WCAG checks | No violations in tested main views, open options, captured results, inspection, and setup guide |
+| Automated axe WCAG checks | No violations in tested main views, open options, captured results, inspection, and all walkthrough steps; both themes covered at 320px |
 | Viewport overflow | None at 1440px, 390px, and 320px |
 | Local Vite-to-FastAPI proxy | Health endpoint returned cloud/inference disabled |
 | npm dependency audit (`npm audit --audit-level=high`) | No known dependency vulnerabilities reported |
@@ -25,15 +25,16 @@ and synthetic OIDC identities, not a real production provider or public site.
 
 Automated accessibility checks are not a full manual accessibility audit.
 The Python test run currently emits a third-party Starlette/httpx deprecation
-warning; all API tests pass. Initial JavaScript is approximately 435 kB
-(137 kB gzip), down from 529 kB (163 kB gzip). The approximately 94 kB strict
+warning; all API tests pass. Initial JavaScript is approximately 445 kB
+(140 kB gzip), compared with 435 kB (137 kB gzip) before the redesign and
+529 kB (163 kB gzip) before on-demand validation. The approximately 94 kB strict
 validation engine loads on the first run/import; the graph is loaded separately.
 The build no longer emits the large-chunk advisory. These sizes are build
 measurements, not real-host latency or Core Web Vitals results.
 
 ## Private deployment/security verification
 
-229 Python/frontend/browser/navigation tests pass, in addition to the container SSO smoke
+257 Python/frontend/browser/navigation tests pass, in addition to the container SSO smoke
 checks. Production requires independent private-file gateway/CSRF keys, a fixed
 HTTPS origin, and an explicit user allowlist; partial/invalid configuration fails
 closed. Tests cover authentication before body parsing, strict origin and fetch
@@ -98,6 +99,9 @@ remains private.
 ## Verified interactions
 
 - Architecture node selection updates the explanation, without executing tools.
+- Plain-language steps explain the document instruction and file-access boundary.
+  Planned AWS flow and fixed-role inspections remain available in a collapsed
+  section, explicitly separate from local results.
 - npm/Python package names and the lockfile consistently use `beacon`; the
   browser, API documentation, health response, and CLI use Beacon branding.
 - Role selection inspects planned scope, without changing execution identities.
@@ -105,9 +109,21 @@ remains private.
 - React Bits component states are explicitly local visual previews.
 - AnimatedList keyboard handling is scoped; Tab is not intercepted globally.
 - The guide supports navigation and Escape dismissal, including React StrictMode.
+- The walkthrough adds/removes a hidden instruction and illustrates access to
+  both files. Applying an example resets draft execution options without running
+  a simulation or changing an existing capture; focus returns to the editor.
+  Exiting steps are inert and closing without applying restores trigger focus.
 - Secondary navigation stays hidden until opened. Mobile navigation traps focus;
   both desktop and mobile support Escape and focus return.
 - System and explicit reduced-motion preferences are respected.
+- Light/dark themes persist across reloads and synchronize between tabs. The
+  device preference remains live, unknown values fall back safely, and denied
+  storage does not break the app. The production same-origin theme script loads
+  with the strict script policy intact; only the theme preference is persisted.
+- Direct links, Back/Forward, page titles, and draft preservation are exercised.
+- Magnetic button content attracts/repels by at most five pixels without moving
+  the hit area. Keyboard activation, touch/coarse-pointer static alternatives,
+  and runtime reduced-motion changes are covered.
 - The permission preview changes document scope descriptions without executing
   tools, editing the policy draft, or presenting configured access as evidence.
 - RubberSegment supports native clicks, scoped arrow/Home/End navigation, and
@@ -119,7 +135,7 @@ remains private.
 - The interface remains usable without a local API connection.
 - Real local API calls capture paired outcomes; no frontend-fabricated replacement
   is used when the API fails.
-- Clean/ignored attacks show Not triggered rather than claiming a permission denial.
+- Clean/ignored attacks show No private file requested rather than claiming a permission denial.
 - Retrieval without disclosure is distinguished from both denial and exposure.
 - Protected context never reuses payroll from a previous vulnerable run.
 - Session protection, foreign-origin rejection, UTF-8 input bounds, body limits,
@@ -137,10 +153,11 @@ remains private.
 - Unknown/cloud claims, malformed traces, contradictory measurements, changed
   document hashes, oversized inputs, and active HTML are rejected or kept inert.
 
-The React Bits playground was reviewed at 1440px, 390px, and 320px, with separate
-preview/result screenshots. Overflow and axe checks also covered open options,
-Architecture, Component bench, and Local setup at all three sizes. Browser
-assertions require visible graph nodes. Earlier verification
+The redesigned lab was reviewed in light/dark themes at 1440px, 390px, and 320px,
+with separate preview/result/graph/walkthrough screenshots. Overflow and axe
+checks covered open options, How it works, Interaction studio, Run locally, and
+all walkthrough steps. Browser assertions require visible graph nodes, including
+keyboard selection of the correct inspector. Earlier verification
 corrected graph node sizing and tool-chip contrast; cleanup verification also
 caught and corrected empty-state text contrast.
 
@@ -149,6 +166,14 @@ the canvas clears after the click burst. It also switches the system preference
 at runtime. That check caught a snapshot-only motion-hook behavior; the new
 controls and app now use live media-query subscriptions rather than relying only
 on the library's initial reduced-motion value.
+
+Redesign checks corrected selected-control and nested-walkthrough contrast,
+Back navigation to an unhashed lab URL, and modal positioning. Running Docker
+network creation/removal alongside browser tests interrupted Chromium asset
+loading with `ERR_NETWORK_CHANGED`. The final browser suite ran separately from
+container checks; no assertion or navigation retry policy was relaxed. The
+private HTTPS/SSO stack separately verified the production theme bootstrap,
+persisted selection, no browser errors, and unchanged authentication boundaries.
 
 The project was relocated to `/home/aadvik/beacon` without discarding working
 changes. Virtual-environment activation/entry points and the editable Python

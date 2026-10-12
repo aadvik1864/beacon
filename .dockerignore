@@ -18,6 +18,7 @@ frontend/**
 !frontend/public/
 frontend/public/**
 !frontend/public/favicon.svg
+!frontend/public/theme.js
 !frontend/src/
 frontend/src/**
 !frontend/src/*.ts

@@ -10,14 +10,14 @@ import type { RunRecord } from '../../lib/experiment';
 type GraphData = { label: string; subtitle: string; kind: string; stage: string };
 type GraphNode = Node<GraphData, 'beacon'>;
 const nodeDefinitions = [
-  { id: 'question', x: 0, y: 0, label: 'Question', subtitle: 'Captured input', kind: 'question' },
-  { id: 'policy', x: 0, y: 150, label: 'Leave policy', subtitle: 'Untrusted document', kind: 'policy' },
-  { id: 'model', x: 220, y: 75, label: 'Scripted assistant', subtitle: 'Not a live LLM', kind: 'model' },
+  { id: 'question', x: 0, y: 0, label: 'Question', subtitle: 'Recorded question', kind: 'question' },
+  { id: 'policy', x: 0, y: 150, label: 'Leave policy', subtitle: 'Document, not instructions', kind: 'policy' },
+  { id: 'model', x: 220, y: 75, label: 'Scripted assistant', subtitle: 'Not a live AI model', kind: 'model' },
   { id: 'backend', x: 440, y: 75, label: 'Document tool', subtitle: 'Fixed identifiers only', kind: 'backend' },
-  { id: 'vulnerable', x: 660, y: -20, label: 'Vulnerable profile', subtitle: 'Policy + payroll', kind: 'vulnerable' },
-  { id: 'protected', x: 660, y: 175, label: 'Protected profile', subtitle: 'Policy only', kind: 'protected' },
-  { id: 'payroll-vulnerable', x: 900, y: -20, label: 'Synthetic payroll', subtitle: 'Vulnerable path', kind: 'payroll' },
-  { id: 'payroll-protected', x: 900, y: 175, label: 'Synthetic payroll', subtitle: 'Protected path', kind: 'payroll' },
+  { id: 'vulnerable', x: 660, y: -20, label: 'Too much access', subtitle: 'Policy + payroll', kind: 'vulnerable' },
+  { id: 'protected', x: 660, y: 175, label: 'Limited access', subtitle: 'Policy only', kind: 'protected' },
+  { id: 'payroll-vulnerable', x: 900, y: -20, label: 'Fictional payroll', subtitle: 'Too much access path', kind: 'payroll' },
+  { id: 'payroll-protected', x: 900, y: 175, label: 'Fictional payroll', subtitle: 'Limited access path', kind: 'payroll' },
 ];
 const descriptions: Record<string, string> = {
   question: 'The captured question is used for every selected target. Editing a draft does not change an existing result.',
@@ -49,8 +49,6 @@ const initialNodes: GraphNode[] = nodeDefinitions.map(definition => ({
 
 export default function AccessGraph({ record, cursor }: { record: RunRecord | null; cursor: number }) {
   const [selected, setSelected] = useState('backend');
-  // Keep React Flow's measured dimensions as well as drag positions. Recreating
-  // nodes without those measurements leaves custom nodes permanently hidden.
   const [layoutNodes, , onNodesChange] = useNodesState<GraphNode>(initialNodes);
   const observed = record?.events.slice(0, cursor + 1) ?? [];
   function stage(id: string) {
@@ -79,19 +77,23 @@ export default function AccessGraph({ record, cursor }: { record: RunRecord | nu
   ].map(([source, target]) => ({ id: `${source}-${target}`, source, target, markerEnd: { type: MarkerType.ArrowClosed }, type: 'smoothstep' })), []);
   const styledEdges = edges.map(edge => {
     const targetStage = stage(edge.target);
-    return { ...edge, style: { stroke: targetStage === 'denied' || targetStage === 'exposed' ? '#B42332' : targetStage === 'observed' ? '#137665' : '#a9bacb', strokeWidth: 1.5 } };
+    return { ...edge, style: { stroke: targetStage === 'denied' || targetStage === 'exposed' ? 'var(--denied)' : targetStage === 'observed' ? 'var(--allowed)' : 'var(--muted)', strokeWidth: 1.5 } };
   });
 
   return (
     <section className="access-graph-panel" aria-labelledby="access-graph-title">
       <div className="panel-heading"><div><Network size={17} /><h2 id="access-graph-title">Access path</h2></div><span className="text-note">{record ? `Event ${cursor + 1} of ${record.events.length}` : 'Local preview'}</span></div>
       <div className="access-graph-canvas" role="region" aria-label="Interactive local access diagram">
-        <ReactFlow<GraphNode> nodes={nodes} edges={styledEdges} nodeTypes={nodeTypes} onNodesChange={onNodesChange} onNodeClick={(_, node) => setSelected(node.id)} deleteKeyCode={null} fitView fitViewOptions={{ padding: 0.12 }} minZoom={0.25} maxZoom={1.5} nodesConnectable={false} edgesReconnectable={false} attributionPosition="bottom-left">
-          <Background color="#d5e0ec" gap={20} size={1} /><Controls showInteractive={false} />
+        <ReactFlow<GraphNode> nodes={nodes} edges={styledEdges} nodeTypes={nodeTypes} onNodesChange={changes => {
+          const selection = changes.find(change => change.type === 'select' && change.selected);
+          if (selection?.type === 'select') setSelected(selection.id);
+          onNodesChange(changes);
+        }} onNodeClick={(_, node) => setSelected(node.id)} deleteKeyCode={null} fitView fitViewOptions={{ padding: 0.12 }} minZoom={0.25} maxZoom={1.5} nodesConnectable={false} edgesReconnectable={false} attributionPosition="bottom-left">
+          <Background color="var(--line)" gap={20} size={1} /><Controls showInteractive={false} />
         </ReactFlow>
       </div>
       <div className="graph-inspector" aria-live="polite"><strong>{nodeDefinitions.find(node => node.id === selected)?.label}</strong><p>{descriptions[selected]}</p></div>
-      <details className="graph-text-alternative"><summary>Text version</summary><p>The question and policy go to the scripted assistant, which requests documents through the tool. The vulnerable profile can read payroll; the protected profile cannot. Moving nodes changes the layout, not permissions. This graph shows local events, not AWS activity.</p></details>
+      <details className="graph-text-alternative"><summary>Text version</summary><p>The question and policy go to the scripted assistant, which requests files through the document tool. The version with too much access can read payroll; the limited version cannot. Moving nodes changes the layout, not access. This graph shows local events, not AWS activity.</p></details>
     </section>
   );
 }

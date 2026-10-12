@@ -14,6 +14,7 @@ Source revision: `f586a29d6b90a9bf8027b76e978a82230160b8c6`.
 | SpotlightCard.tsx | src/ts-tailwind/Components/SpotlightCard/SpotlightCard.tsx |
 | RubberSegment.tsx | src/ts-tailwind/Micro/RubberSegment/RubberSegment.tsx |
 | ClickSpark.tsx | src/ts-tailwind/Animations/ClickSpark/ClickSpark.tsx |
+| MagneticButton.tsx | src/ts-tailwind/Animations/Magnet/Magnet.tsx |
 
 Modifications: light-workbench theming; semantic buttons and scoped keyboard
 navigation instead of global Tab interception; explicit reduced-motion controls;
@@ -34,6 +35,14 @@ ClickSpark has a HiDPI canvas, bounded particles, keyboard-click positioning,
 and a drawing loop that runs only while sparks exist. All three respect live
 system and explicit reduced-motion settings. The custom permission illustration
 shows configured local scopes, not observed access or AWS activity.
+
+MagneticButton adapts Magnet's pointer-relative displacement into a native
+button with a stationary hit area. Only its content moves, bounded to five
+pixels with demand-driven springs. A repulsion variant demonstrates the reverse
+interaction. There are no global pointer listeners; touch, coarse pointers,
+disabled controls, and system or explicit reduced motion retain static controls.
+The shared treatment is used in navigation, the walkthrough, document actions,
+explanations, replay controls, and the interaction preview.
 
 Components are included as part of this application, not distributed as a
 standalone component package. See the complete retained license below.

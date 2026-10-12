@@ -1,95 +1,103 @@
 # Design direction
 
-## Concept
+## Purpose
 
-A security experiment workbench, not a landing page or generic KPI dashboard.
-One shared model/tool path divides into two role-specific access boundaries.
-The split is the memorable visual device; everything else stays quiet.
+Beacon is a hands-on security lab for learning why assistants need limited file
+access. A visitor can add a misleading instruction to a fictional leave policy,
+ask a normal question, and compare what two access configurations allow.
+The assistant is scripted; neither live model inference nor AWS is enabled.
 
-## Tokens
+The comparison, not a separate marketing homepage, is the visual anchor.
+One file request divides into an allowed and a restricted path. Numbered steps
+describe an actual sequence; color distinguishes access, not decoration.
 
-| Token | Value | Role |
-| --- | --- | --- |
-| Workspace | #EEF3F8 | Page canvas |
-| Surface | #FFFFFF | Working panels |
-| Ink | #152536 | Main text and diagram |
-| Preview | #18324F | Local permission illustration |
-| Signal | #2458D3 | Focus, selected controls |
-| Allowed | #137665 | Allowed permission descriptions |
-| Denied | #B42332 | Restricted permission descriptions |
+## Palette and type
 
-IBM Plex Sans carries interface text. IBM Plex Mono is reserved for actual code,
-object keys, tool calls, and setup commands. Both fonts are served locally.
+| Token | Light | Dark | Purpose |
+| --- | --- | --- | --- |
+| Workspace | #F4F6FA | #161E32 | Porcelain / deep-indigo canvas |
+| Surface | #FFFFFF | #202B43 | Working panels |
+| Ink | #24334C | #EBEFF8 | Primary text |
+| Signal | #5143AC | #BAA6F4 | Iris selection and focus |
+| Allowed | #137467 | #76DEC1 | Readable files |
+| Denied | #AF324B | #FF9FAE | Restricted access and exposure |
 
-## Layout
+The illustrative access panel uses a persistent indigo surface, contrasting
+with the editable workspace in light mode. IBM Plex Sans is used for headings
+and interface text; locally served IBM Plex Mono is reserved for file paths,
+editable fixture text, and code. No external font requests are needed.
 
-Compact horizontal navigation; a document editor beside paired results. Settings
-and developer tools live in the More menu. Mobile uses a small navigation drawer
-and stacks the editor and results in reading order.
+The theme follows the device unless explicitly changed. A header toggle saves
+only `beacon.theme` in local storage, synchronizes between tabs, and continues
+working if storage is unavailable. The More menu restores the device preference.
+An external same-origin bootstrap script sets the theme before the stylesheet
+and application load, without weakening the hosted script security policy.
 
-## Interaction and motion
-
-Motion answers a user action: switching a document/template, moving the pointer
-or keyboard focus, running a comparison, or navigating the setup guide. React
-Bits RubberSegment stretches a selector's leading/trailing edges. SpotlightCard
-tracks local pointer/focus position without a global listener or drawing loop.
-ClickSpark draws a short, bounded burst when the run button is activated and
-stops when it is finished. Captured results reveal once after execution/import.
-No looping background or continuous idle animation is used. System and explicit
-reduced-motion preferences are respected, including preference changes.
-
-## Beacon experiment surface
-
-The editor is the preparation space; the paired results are the inspection space.
-The split permission boundary remains the visual anchor, not a generic dashboard
-of counts. The light steel-blue palette and Plex typography are retained through
-the Beacon rename. A radio-tower mark identifies the app without replacing the
-security vocabulary of its permission controls.
+## Hierarchy and navigation
 
 ```text
-Beacon   Playground   Architecture                          More
+Beacon   Try it   How it works                 Walkthrough   Theme   More
 
-Document + question          Permission preview before a run
-                             Vulnerable / protected answers after a run
-Options (closed)             Access details (closed)
-Run comparison               Export / Run info
+Learn why AI needs access limits.              Show me an example
+Plain-language purpose and simulation scope    Open a saved result
+
+1 Choose a document   2 Ask a question   3 Compare access
+
+Document + question                           Interactive access illustration
+Options (closed)                              Paired answers after a run
+Run comparison                                Access details / Export / Run info
 
 Inspect run (closed)
   Events | Access path
 ```
 
-One short notice identifies the scripted simulation, synthetic data, and absence
-of AWS calls. Imported captures retain a visible unverified-authenticity label.
-A changed draft cannot silently relabel a capture.
+The default screen explains the purpose and immediately presents the lab.
+Secondary tools live in More. Hash links, page titles, Back, and Forward track
+the selected view without discarding the in-memory draft. Mobile uses a compact
+focus-contained navigation drawer and stacks the editor and results.
 
-Results show the outcome and answer first. Measurements, tool feedback, and
-explanations are behind Access details. Before a run there is one empty state,
-not duplicate empty cards or empty graphs. Options, exports, run metadata, and
-inspection tools use progressive disclosure. Replay remains user initiated.
+How it works provides selectable explanations, read-only document previews,
+and the access illustration. Future AWS architecture and role inspections stay
+available under an explicitly planned, collapsed section. The interaction
+studio contains visual component demonstrations; Run locally shows actual
+service readiness and startup commands.
 
-Graph nodes are selectable/draggable, with keyboard controls and a text
-alternative. Moving a node changes layout only. Inspection tabs preserve graph
-layout and event filters while open; closing inspection pauses replay.
+## Practical walkthrough
 
-## Review before implementation
+The walkthrough demonstrates a normal leave question, lets the visitor add or
+remove the misleading payroll instruction, and explores access to both files.
+Expected behavior is labeled as illustration, never recorded evidence.
+Use this example prepares the lab document, question, paired target, and scripted
+behavior but does not execute a request. The replacement is disclosed before
+activation, existing captures remain unchanged, and focus returns to the editor.
+Closing without applying an example restores focus to the triggering control.
 
-The first workbench became too dense: a sidebar, repeated mode banners, large
-slogans, duplicated permission rows, and permanently expanded evidence panels.
-The revised screen keeps the split result comparison but removes the competing
-chrome. Headings name the page or task. UI copy uses plain punctuation, no long
-dashes or decorative taglines. The existing palette and local Plex fonts remain;
-body text is larger rather than using tiny type to fit more labels.
+Actual results use Too much access and Limited access rather than unexplained
+profile names. Private-file request, reading, assistant delivery, and answer
+disclosure remain separate measurements. Imported results retain an unverified
+source notice; changed drafts cannot rewrite existing captures.
 
-## Interactive polish
+## Interaction and restraint
 
-The visual emphasis is a navy permission preview, not a decorative hero or an
-always-moving background. Selecting policy/payroll changes the allowed paths
-and the accompanying plain-language scope description. No requests or captures
-are created by the preview. It disappears when actual local results are present.
+Eight pinned React Bits adaptations share the existing Motion dependency.
+MagneticButton adapts Magnet into a native button: its contents attract or repel
+by at most five pixels, while the click target remains stationary. The behavior
+is shared by navigation, walkthrough actions, explanations, document controls,
+exports, copying, and replay controls. Touch, coarse pointers, disabled controls,
+and reduced motion use static buttons. No global pointer listener is needed.
 
-The larger heading, softer canvas, document surface, and role icons make the
-workbench easier to scan. The editor and actual answers remain white, with color
-reserved for selection, access, and outcomes. Native button activation and scoped
-arrow/Home/End navigation keep the new controls usable without a pointer. Custom
-documents do not falsely select a built-in template. Settings and evidence remain
-collapsed so the added interaction does not bring back the earlier clutter.
+RubberSegment animates scoped document/template selection. SpotlightCard follows
+local pointer or keyboard focus. ClickSpark draws a bounded, demand-only burst
+for the run action and stops when complete. Results reveal only after capture;
+there are no continuous decorative backgrounds or ambient loops.
+
+System and explicit reduced-motion preferences work at runtime. Native controls,
+visible focus, text/icon access states, keyboard list/graph navigation, modal
+focus handling, and a graph text alternative remain available. Exiting
+walkthrough steps become inert so invisible controls cannot receive focus.
+
+The screen uses progressively disclosed options, measurements, exports, and
+inspection. There is one empty state before execution, not duplicate empty
+results or graphs. Copy is task-focused, with no decorative slogans or long
+dashes. The shared split-access illustration is the distinctive element;
+the surrounding interface remains quiet.
