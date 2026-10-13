@@ -68,6 +68,16 @@
 - [x] Direct links, browser history, page titles, and plain-language search metadata.
 - [x] Existing planned AWS inspections preserved under an explicitly labeled collapsed section.
 
+## Public showcase
+
+- [x] Explicit browser-demo build with no backend, sign-in, or paid services.
+- [x] Browser simulation provenance in captured events, JSON, and Markdown reports.
+- [x] Browser/Python parity checks for answers, measurements, and tool traces.
+- [x] Static-host security headers and desktop/mobile tests against built assets.
+- [x] Component and font licenses included in the static build and checked over HTTP.
+- [x] Cloudflare Pages deployment and rollback instructions; repository stays private.
+- [ ] Publish the verified build and run acceptance tests against its public URL.
+
 ## Private-hosted simulation hardening
 
 - [x] Fail-closed production settings, independent gateway/CSRF keys, and explicit SSO allowlist.

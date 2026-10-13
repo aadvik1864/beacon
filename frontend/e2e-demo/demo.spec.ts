@@ -46,6 +46,21 @@ test('static host applies the tested security policy and visitors need no connec
   await expect(page.getByRole('button', { name: 'Sign out' })).toHaveCount(0);
 });
 
+test('public assets retain the component and font licenses', async ({ page }) => {
+  const licenses = [
+    ['React-Bits.txt', '../THIRD_PARTY_NOTICES.md'],
+    ['IBM-Plex-Sans.txt', '../node_modules/@fontsource/ibm-plex-sans/LICENSE'],
+    ['IBM-Plex-Mono.txt', '../node_modules/@fontsource/ibm-plex-mono/LICENSE'],
+  ];
+  for (const [name, path] of licenses) {
+    const response = await page.request.get(`/licenses/${name}`);
+    expect(response.status()).toBe(200);
+    expect(response.headers()['content-type']).toContain('text/plain');
+    expect(response.headers()['x-content-type-options']).toBe('nosniff');
+    expect(await response.text()).toBe(await readFile(new URL(path, import.meta.url), 'utf8'));
+  }
+});
+
 test('walkthrough prepares a hidden instruction and paired browser results export provenance', async ({ page }) => {
   await page.getByRole('button', { name: 'Show me an example' }).click();
   await page.getByRole('button', { name: 'Add a hidden instruction', exact: true }).click();

@@ -2,12 +2,16 @@ import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useExperiment } from './useExperiment';
 import { clearApiCaptures, runSimulation } from '../lib/api';
+import * as browserSimulation from '../lib/browserSimulation';
 import { baselineRecord } from '../test/runFixture';
 import type { RunRecord } from '../lib/experiment';
 
 vi.mock('../lib/api', () => ({ runSimulation: vi.fn(), clearApiCaptures: vi.fn().mockResolvedValue(undefined) }));
 
-beforeEach(() => { vi.mocked(runSimulation).mockReset(); });
+beforeEach(() => {
+  vi.mocked(runSimulation).mockReset();
+  vi.mocked(clearApiCaptures).mockClear();
+});
 
 describe('experiment controls', () => {
   it('runs and clears explicit browser captures without contacting the API', async () => {
@@ -46,6 +50,49 @@ describe('experiment controls', () => {
     expect(result.current.error).toBe('API offline');
     expect(result.current.record).toBe(captured);
     expect(result.current.busy).toBe(false);
+  });
+
+  describe.each(['api', 'browser-demo'] as const)('%s failures', mode => {
+    it.each([
+      {
+        kind: 'execution unavailable',
+        error: new TypeError('Execution unavailable'),
+        apiMessage: 'Cannot reach the Beacon API. Check the connection and try again.',
+        demoMessage: 'The browser simulation could not complete. Try reloading this page.',
+      },
+      {
+        kind: 'validation failure',
+        error: new Error('Invalid simulation input'),
+        apiMessage: 'Invalid simulation input',
+        demoMessage: 'Invalid simulation input',
+      },
+      {
+        kind: 'aborted request',
+        error: new DOMException('Request aborted', 'AbortError'),
+        apiMessage: 'The local request timed out. Check the API connection before trying again.',
+        demoMessage: 'The browser simulation was interrupted. Try again.',
+      },
+      {
+        kind: 'unknown failure',
+        error: null,
+        apiMessage: 'The local request timed out. Check the API connection before trying again.',
+        demoMessage: 'The browser simulation was interrupted. Try again.',
+      },
+    ])('reports $kind without switching executors', async ({ error, apiMessage, demoMessage }) => {
+      const browserRun = vi.spyOn(browserSimulation, 'runBrowserSimulation');
+      const execute = mode === 'browser-demo' ? browserRun : vi.mocked(runSimulation);
+      const unused = mode === 'browser-demo' ? vi.mocked(runSimulation) : browserRun;
+      execute.mockRejectedValueOnce(error);
+
+      const { result } = renderHook(() => useExperiment(mode));
+      await act(() => result.current.run('both'));
+
+      expect(result.current.error).toBe(mode === 'browser-demo' ? demoMessage : apiMessage);
+      expect(result.current.record).toBeNull();
+      expect(result.current.busy).toBe(false);
+      expect(execute).toHaveBeenCalledTimes(1);
+      expect(unused).not.toHaveBeenCalled();
+    });
   });
 
   it('rejects invalid drafts before contacting the API', async () => {

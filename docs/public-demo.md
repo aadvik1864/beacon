@@ -66,6 +66,9 @@ allows scripts/fonts/images from this origin, blocks application connections,
 framing, workers, forms, objects and base overrides, and permits inline styles
 needed by React Flow and Motion. No analytics, external fonts or paid services
 are configured. Never upload diagnostic traces or the whole repository as assets.
+Both build modes include the React Bits and IBM Plex font licenses under
+`dist/licenses/`. The deployed-URL suite checks that those notices are served
+unchanged; keep them in the uploaded build.
 
 ## First Pages release
 

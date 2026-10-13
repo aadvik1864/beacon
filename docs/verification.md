@@ -8,34 +8,53 @@ and synthetic OIDC identities, not a real production provider or public site.
 
 | Check | Result |
 | --- | --- |
-| Python API/engine/CLI/security/release/monitor tests (`.venv/bin/python -m pytest`) | 133 passed |
-| React/schema/hook/API/theme tests (`npm run test`) | 53 passed |
+| Python API/engine/CLI/security/release/monitor tests (`.venv/bin/python -m pytest`) | 134 passed |
+| React/schema/hook/API/theme/browser-engine tests (`npm run test`) | 112 passed |
 | Bounded deployment readiness/navigation regressions (`node --test tests/deployment/navigation.test.mjs`) | 15 passed |
-| Browser tests (`npm run test:e2e`) | 56 passed across desktop/mobile |
-| TypeScript check and production build (`npm run build`) | Passed |
+| API browser tests (`npm run test:e2e`) | 56 passed across desktop/mobile |
+| Static showcase browser tests (`npm run test:e2e:demo`) | 14 passed across desktop/mobile |
+| TypeScript check and both production builds (`npm run build`, `npm run build:demo`) | Passed |
+| Python/browser parity (`scripts/check-browser-parity.py --check`) | 34 fixture cases current; included in the frontend test count |
 | Automated axe WCAG checks | No violations in tested main views, open options, captured results, inspection, and all walkthrough steps; both themes covered at 320px |
 | Viewport overflow | None at 1440px, 390px, and 320px |
 | Local Vite-to-FastAPI proxy | Health endpoint returned cloud/inference disabled |
 | npm dependency audit (`npm audit --audit-level=high`) | No known dependency vulnerabilities reported |
 | Pinned Python runtime audit (`pip-audit -r requirements.lock --require-hashes --disable-pip`) | No known vulnerabilities reported |
-| Git history and working-tree credential scans (Gitleaks, redacted output) | No leaks reported |
+| Git history, working-tree, and public-build credential scans (Gitleaks, redacted output) | No leaks reported |
 | All five deployable image scans (`python3 scripts/scan-images.py`) | Zero reported high/critical advisories, none suppressed |
 | Private HTTPS/SSO stack (`scripts/test-deployment.py`) | Passed with synthetic HTTPS OIDC issuer |
 | Same-engine CLI | Injected scenario produces EXPOSED / DENIED_BY_APP |
 
 Automated accessibility checks are not a full manual accessibility audit.
 The Python test run currently emits a third-party Starlette/httpx deprecation
-warning; all API tests pass. Initial JavaScript is approximately 445 kB
-(140 kB gzip), compared with 435 kB (137 kB gzip) before the redesign and
+warning; all API tests pass. Initial JavaScript is approximately 446 kB
+(141 kB gzip), compared with 435 kB (137 kB gzip) before the redesign and
 529 kB (163 kB gzip) before on-demand validation. The approximately 94 kB strict
 validation engine loads on the first run/import; the graph is loaded separately.
 The build no longer emits the large-chunk advisory. These sizes are build
 measurements, not real-host latency or Core Web Vitals results.
 
+## Public showcase verification
+
+The static suite serves the built browser-demo assets with the Pages security
+headers and no API. Desktop/mobile checks cover the walkthrough, each outcome,
+edits, graph inspection, replay, exports, unverified imports, themes, keyboard
+access, reduced motion, overflow, and automated accessibility checks. No backend
+requests, browser errors, or CSP violations were observed.
+
+React Bits and IBM Plex licenses are included in both build modes. Tests compare
+the served notices with the original files. Source maps are disabled, and browser
+execution is selected only by build configuration. Eight hook regressions cover
+execution errors and interruption without silently switching between API and
+browser engines.
+
+The public URL has not been deployed or tested. See [public-demo.md](public-demo.md)
+for Pages setup and deployed-URL acceptance; the repository can remain private.
+
 ## Private deployment/security verification
 
-257 Python/frontend/browser/navigation tests pass, in addition to the container SSO smoke
-checks. Production requires independent private-file gateway/CSRF keys, a fixed
+331 Python/frontend/browser/navigation tests pass, in addition to the container SSO smoke
+checks. Private API hosting requires independent private-file gateway/CSRF keys, a fixed
 HTTPS origin, and an explicit user allowlist; partial/invalid configuration fails
 closed. Tests cover authentication before body parsing, strict origin and fetch
 metadata checks, expiring/tampered/user-bound tokens, separate user caches,
@@ -174,14 +193,6 @@ loading with `ERR_NETWORK_CHANGED`. The final browser suite ran separately from
 container checks; no assertion or navigation retry policy was relaxed. The
 private HTTPS/SSO stack separately verified the production theme bootstrap,
 persisted selection, no browser errors, and unchanged authentication boundaries.
-
-The project was relocated to `/home/aadvik/beacon` without discarding working
-changes. Virtual-environment activation/entry points and the editable Python
-installation were repaired, npm metadata and the Vite dependency cache were
-refreshed, and both local servers restarted successfully. The private GitHub
-repository remains `aadvik1864/beacon`. Source/configuration and runtime metadata
-checks found no previous project-name references; historical Git records and
-saved diagnostic reports are not rewritten.
 
 These checks establish local application and synthetic-issuer deployment
 behavior only. There has been no real LLM evaluation, AWS IAM/S3 validation,
