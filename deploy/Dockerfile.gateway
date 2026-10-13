@@ -9,9 +9,6 @@ FROM nginxinc/nginx-unprivileged:stable-alpine@sha256:15c994d10d6d78658721c3bcaf
 USER root
 RUN apk upgrade --no-cache
 COPY --from=build /build/dist /usr/share/nginx/html
-COPY --from=build /build/node_modules/@fontsource/ibm-plex-sans/LICENSE /usr/share/nginx/html/licenses/IBM-Plex-Sans.txt
-COPY --from=build /build/node_modules/@fontsource/ibm-plex-mono/LICENSE /usr/share/nginx/html/licenses/IBM-Plex-Mono.txt
-COPY frontend/THIRD_PARTY_NOTICES.md /usr/share/nginx/html/licenses/React-Bits.txt
 COPY deploy/nginx.conf.template /etc/beacon/nginx.conf.template
 COPY deploy/gateway-entrypoint.sh /etc/beacon/entrypoint.sh
 USER 10001:10001

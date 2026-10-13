@@ -142,7 +142,7 @@ export default function Playground({ experiment, reduceMotion, onOpenGuide }: {
             <button id="events-tab" role="tab" data-view="events" aria-selected={inspectionView === 'events'} aria-controls="events-panel" tabIndex={inspectionView === 'events' ? 0 : -1} onKeyDown={navigateTabs} onClick={() => selectView('events')}>Events</button>
             <button id="graph-tab" role="tab" data-view="graph" aria-selected={inspectionView === 'graph'} aria-controls="graph-panel" tabIndex={inspectionView === 'graph' ? 0 : -1} onKeyDown={navigateTabs} onClick={() => selectView('graph')}>Access path</button>
           </div>
-          <div id="events-panel" role="tabpanel" aria-labelledby="events-tab" hidden={inspectionView !== 'events'}><EventTimeline experiment={experiment} reduceMotion={reduceMotion} /></div>
+          <div id="events-panel" role="tabpanel" aria-labelledby="events-tab" hidden={inspectionView !== 'events'}><EventTimeline record={record} experiment={experiment} reduceMotion={reduceMotion} /></div>
           <div id="graph-panel" role="tabpanel" aria-labelledby="graph-tab" hidden={inspectionView !== 'graph'}>{(graphVisited || inspectionView === 'graph') && <Suspense fallback={<p className="graph-loading" role="status">Loading access path...</p>}><AccessGraph record={record} cursor={experiment.cursor} /></Suspense>}</div>
         </div>}
       </section>}

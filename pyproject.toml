@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "beacon"
 version = "0.2.0"
-description = "Beacon: a local-first AWS prompt-injection security workbench"
+description = "An interactive prompt-injection and file-access simulation lab"
 requires-python = ">=3.11"
 dependencies = ["fastapi>=0.115,<1", "uvicorn>=0.30,<1"]
 

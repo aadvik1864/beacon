@@ -14,16 +14,16 @@ import InteractionStudio from './components/InteractionStudio';
 import LocalSetup from './components/LocalSetup';
 import MagneticButton, { InteractionMotion } from './components/react-bits/MagneticButton';
 
-type Page = 'playground' | 'workbench' | 'components' | 'setup';
 const navigation = [
-  { id: 'playground' as const, label: 'Try it', hash: '#lab', title: 'Beacon | An interactive AI safety lab' },
-  { id: 'workbench' as const, label: 'How it works', hash: '#how-it-works', title: 'How it works | Beacon' },
-  { id: 'components' as const, label: 'Interaction studio', hash: '#interactions', title: 'Interaction studio | Beacon' },
-  { id: 'setup' as const, label: 'Run locally', hash: '#setup', title: 'Run locally | Beacon' },
-];
+  { id: 'lab', label: 'Try it', hash: '#lab', title: 'Beacon | An interactive AI safety lab' },
+  { id: 'how-it-works', label: 'How it works', hash: '#how-it-works', title: 'How it works | Beacon' },
+  { id: 'interactions', label: 'Interaction studio', hash: '#interactions', title: 'Interaction studio | Beacon' },
+  { id: 'setup', label: 'Run locally', hash: '#setup', title: 'Run locally | Beacon' },
+] as const;
+type Page = typeof navigation[number]['id'];
 
 export default function App() {
-  const [page, setPage] = useState<Page>(() => navigation.find(item => item.hash === window.location.hash)?.id ?? 'playground');
+  const [page, setPage] = useState<Page>(() => navigation.find(item => item.hash === window.location.hash)?.id ?? 'lab');
   const [guideOpen, setGuideOpen] = useState(false);
   const [exampleVersion, setExampleVersion] = useState(0);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
@@ -50,7 +50,7 @@ export default function App() {
   useEffect(() => {
     const restore = () => {
       const next = navigation.find(item => item.hash === window.location.hash);
-      if (next || !window.location.hash) { setPage(next?.id ?? 'playground'); setMobileNavOpen(false); }
+      if (next || !window.location.hash) { setPage(next?.id ?? 'lab'); setMobileNavOpen(false); }
     };
     const onRestore = (event: PageTransitionEvent) => { if (event.persisted) window.location.reload(); };
     window.addEventListener('hashchange', restore);
@@ -98,7 +98,7 @@ export default function App() {
     experiment.setBehavior('follow');
     setExampleVersion(value => value + 1);
     exampleApplied.current = true;
-    navigate('playground');
+    navigate('lab');
   }
 
   function closeGuide() {
@@ -131,7 +131,7 @@ export default function App() {
     <div className="app-shell" data-reduced-motion={motionReduced ? 'true' : undefined}>
       <a className="skip-link" href="#main-content">Skip to content</a>
       <header className="app-header" inert={mobile && mobileNavOpen}>
-        <a className="brand" href="#lab" onClick={event => { event.preventDefault(); navigate('playground'); }} aria-label="Beacon home"><span className="brand-mark"><RadioTower size={22} strokeWidth={1.7} /></span><span>Beacon</span></a>
+        <a className="brand" href="#lab" onClick={event => { event.preventDefault(); navigate('lab'); }} aria-label="Beacon home"><span className="brand-mark"><RadioTower size={22} strokeWidth={1.7} /></span><span>Beacon</span></a>
         <nav className="primary-nav" aria-label="Main navigation">{navigation.slice(0, 2).map(({ id, label }) => <MagneticButton key={id} className="header-nav-item" aria-current={page === id ? 'page' : undefined} onClick={() => navigate(id)}>{label}</MagneticButton>)}</nav>
         <div className="header-tools">
           <MagneticButton className="header-guide" onClick={openGuide}>Walkthrough</MagneticButton>
@@ -142,9 +142,9 @@ export default function App() {
       </header>
       {mobile && mobileNavOpen && <div className="mobile-navigation-layer"><div className="nav-scrim" aria-hidden="true" onClick={() => setMobileNavOpen(false)} /><aside ref={navDialog} id="mobile-navigation" className="nav-drawer" role="dialog" aria-modal="true" aria-labelledby="navigation-title" onKeyDown={containNavFocus}><div className="nav-drawer-heading"><h2 id="navigation-title">Navigation</h2><MagneticButton ref={closeNavButton} className="icon-button" aria-label="Close navigation" onClick={() => setMobileNavOpen(false)}><X size={20} /></MagneticButton></div><nav aria-label="Mobile navigation">{navigation.slice(0, 2).map(({ id, label }) => <MagneticButton key={id} aria-current={page === id ? 'page' : undefined} onClick={() => navigate(id)}>{label}</MagneticButton>)}</nav><div className="nav-drawer-tools">{settings}</div></aside></div>}
       <div className="main-shell" inert={mobile && mobileNavOpen}><main ref={main} id="main-content" className="main-content" tabIndex={-1}>
-        {page === 'playground' && <Playground key={exampleVersion} experiment={experiment} reduceMotion={motionReduced} onOpenGuide={openGuide} />}
-        {page === 'workbench' && <HowItWorks reduceMotion={motionReduced} onOpenGuide={openGuide} />}
-        {page === 'components' && <InteractionStudio reduceMotion={motionReduced} />}
+        {page === 'lab' && <Playground key={exampleVersion} experiment={experiment} reduceMotion={motionReduced} onOpenGuide={openGuide} />}
+        {page === 'how-it-works' && <HowItWorks reduceMotion={motionReduced} onOpenGuide={openGuide} />}
+        {page === 'interactions' && <InteractionStudio reduceMotion={motionReduced} />}
         {page === 'setup' && <LocalSetup api={api} reduceMotion={motionReduced} />}
       </main></div>
       {guideOpen && <SetupGuide reduceMotion={motionReduced} busy={experiment.busy} onUseExample={useExample} onClose={closeGuide} />}

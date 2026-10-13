@@ -96,8 +96,7 @@ visible focus, text/icon access states, keyboard list/graph navigation, modal
 focus handling, and a graph text alternative remain available. Exiting
 walkthrough steps become inert so invisible controls cannot receive focus.
 
-The screen uses progressively disclosed options, measurements, exports, and
-inspection. There is one empty state before execution, not duplicate empty
-results or graphs. Copy is task-focused, with no decorative slogans or long
-dashes. The shared split-access illustration is the distinctive element;
-the surrounding interface remains quiet.
+Options, measurements, exports, and inspection open on demand. There is one
+empty state before execution, not duplicate empty results or graphs. The shared
+split-access illustration is the visual anchor; the rest of the interface stays
+focused on the experiment.

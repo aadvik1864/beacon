@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import {
   ReactFlow, Background, Controls, Handle, Position, MarkerType, useNodesState,
   type Node, type NodeProps, type Edge,
@@ -46,13 +46,19 @@ const initialNodes: GraphNode[] = nodeDefinitions.map(definition => ({
   id: definition.id, type: 'beacon', position: { x: definition.x, y: definition.y },
   data: { label: definition.label, subtitle: definition.subtitle, kind: definition.kind, stage: 'idle' },
 }));
+const edges: Edge[] = [
+  ['question', 'model'], ['policy', 'model'], ['model', 'backend'], ['backend', 'vulnerable'],
+  ['backend', 'protected'], ['vulnerable', 'payroll-vulnerable'], ['protected', 'payroll-protected'],
+].map(([source, target]) => ({
+  id: `${source}-${target}`, source, target,
+  markerEnd: { type: MarkerType.ArrowClosed }, type: 'smoothstep',
+}));
 
-export default function AccessGraph({ record, cursor }: { record: RunRecord | null; cursor: number }) {
+export default function AccessGraph({ record, cursor }: { record: RunRecord; cursor: number }) {
   const [selected, setSelected] = useState('backend');
   const [layoutNodes, , onNodesChange] = useNodesState<GraphNode>(initialNodes);
-  const observed = record?.events.slice(0, cursor + 1) ?? [];
+  const observed = record.events.slice(0, cursor + 1);
   function stage(id: string) {
-    if (!record) return 'idle';
     if (id.startsWith('payroll-')) {
       const actor = id.endsWith('protected') ? 'protected' : 'vulnerable';
       if (observed.some(event => event.actor === actor && event.event_type === 'access_denied')) return 'denied';
@@ -71,10 +77,6 @@ export default function AccessGraph({ record, cursor }: { record: RunRecord | nu
     ariaLabel: `Inspect ${node.data.label}: ${stage(node.id)}`,
     data: { ...node.data, stage: stage(node.id) },
   }));
-  const edges: Edge[] = useMemo(() => [
-    ['question', 'model'], ['policy', 'model'], ['model', 'backend'], ['backend', 'vulnerable'],
-    ['backend', 'protected'], ['vulnerable', 'payroll-vulnerable'], ['protected', 'payroll-protected'],
-  ].map(([source, target]) => ({ id: `${source}-${target}`, source, target, markerEnd: { type: MarkerType.ArrowClosed }, type: 'smoothstep' })), []);
   const styledEdges = edges.map(edge => {
     const targetStage = stage(edge.target);
     return { ...edge, style: { stroke: targetStage === 'denied' || targetStage === 'exposed' ? 'var(--denied)' : targetStage === 'observed' ? 'var(--allowed)' : 'var(--muted)', strokeWidth: 1.5 } };
@@ -82,7 +84,7 @@ export default function AccessGraph({ record, cursor }: { record: RunRecord | nu
 
   return (
     <section className="access-graph-panel" aria-labelledby="access-graph-title">
-      <div className="panel-heading"><div><Network size={17} /><h2 id="access-graph-title">Access path</h2></div><span className="text-note">{record ? `Event ${cursor + 1} of ${record.events.length}` : 'Local preview'}</span></div>
+      <div className="panel-heading"><div><Network size={17} /><h2 id="access-graph-title">Access path</h2></div><span className="text-note">Event {cursor + 1} of {record.events.length}</span></div>
       <div className="access-graph-canvas" role="region" aria-label="Interactive local access diagram">
         <ReactFlow<GraphNode> nodes={nodes} edges={styledEdges} nodeTypes={nodeTypes} onNodesChange={changes => {
           const selection = changes.find(change => change.type === 'select' && change.selected);

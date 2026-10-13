@@ -12,8 +12,6 @@ import MagneticButton from './MagneticButton';
 interface StepperProps {
   children: ReactNode;
   labels: string[];
-  initialStep?: number;
-  onStepChange?: (step: number) => void;
   onFinalStepCompleted?: () => void;
   reduceMotion?: boolean;
   className?: string;
@@ -28,14 +26,12 @@ const stepVariants: Variants = {
 export default function Stepper({
   children,
   labels,
-  initialStep = 1,
-  onStepChange,
   onFinalStepCompleted,
   reduceMotion = false,
   className = '',
 }: StepperProps) {
   const stepsArray = Children.toArray(children);
-  const [currentStep, setCurrentStep] = useState(initialStep);
+  const [currentStep, setCurrentStep] = useState(1);
   const [direction, setDirection] = useState(0);
   const systemReducedMotion = useReducedMotion();
   const reduced = reduceMotion || Boolean(systemReducedMotion);
@@ -45,7 +41,6 @@ export default function Stepper({
     if (newStep < 1 || newStep > totalSteps) return;
     setDirection(newStep > currentStep ? 1 : -1);
     setCurrentStep(newStep);
-    onStepChange?.(newStep);
   }
 
   return (

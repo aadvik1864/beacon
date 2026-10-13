@@ -9,7 +9,7 @@ and synthetic OIDC identities, not a real production provider or public site.
 | Check | Result |
 | --- | --- |
 | Python API/engine/CLI/security/release/monitor tests (`.venv/bin/python -m pytest`) | 134 passed |
-| React/schema/hook/API/theme/browser-engine tests (`npm run test`) | 112 passed |
+| React/schema/hook/API/theme/browser-engine tests (`npm run test`) | 116 passed |
 | Bounded deployment readiness/navigation regressions (`node --test tests/deployment/navigation.test.mjs`) | 15 passed |
 | API browser tests (`npm run test:e2e`) | 56 passed across desktop/mobile |
 | Static showcase browser tests (`npm run test:e2e:demo`) | 14 passed across desktop/mobile |
@@ -27,10 +27,9 @@ and synthetic OIDC identities, not a real production provider or public site.
 
 Automated accessibility checks are not a full manual accessibility audit.
 The Python test run currently emits a third-party Starlette/httpx deprecation
-warning; all API tests pass. Initial JavaScript is approximately 446 kB
-(141 kB gzip), compared with 435 kB (137 kB gzip) before the redesign and
-529 kB (163 kB gzip) before on-demand validation. The approximately 94 kB strict
-validation engine loads on the first run/import; the graph is loaded separately.
+warning; all API tests pass. Initial JavaScript is approximately 443 kB
+(140 kB gzip). The API client, browser engine, validation engine, and graph load
+separately when needed. The public demo does not load the API client.
 The build no longer emits the large-chunk advisory. These sizes are build
 measurements, not real-host latency or Core Web Vitals results.
 
@@ -53,7 +52,7 @@ for Pages setup and deployed-URL acceptance; the repository can remain private.
 
 ## Private deployment/security verification
 
-331 Python/frontend/browser/navigation tests pass, in addition to the container SSO smoke
+335 Python/frontend/browser/navigation tests pass, in addition to the container SSO smoke
 checks. Private API hosting requires independent private-file gateway/CSRF keys, a fixed
 HTTPS origin, and an explicit user allowlist; partial/invalid configuration fails
 closed. Tests cover authentication before body parsing, strict origin and fetch
@@ -74,14 +73,9 @@ Container logs contain neither generated secrets, test email addresses, nor the
 private-input test marker. The fixture stack and its volumes are removed after
 testing. The preflight and key generator also have regression tests.
 
-The first hosted verification failed on a pre-login Chromium
-`ERR_NETWORK_CHANGED` after Docker networking started, despite passing backend
-and frontend checks. The fixture now waits for healthy OIDC discovery and
-anonymous API rejection, and retries only that read-only navigation error at
-most twice. Authentication/callback/POST/certificate/timeout checks remain strict.
-Fifteen isolated regression cases cover success, bounds, and fail-fast behavior.
-CI attempts image builds/scans even after earlier verification failures, without
-turning a failed verification into a release success.
+CI attempts image builds/scans even after earlier checks fail. A failed or
+skipped required step still blocks release. Authentication, callback, mutation,
+certificate, and timeout assertions are not retried.
 
 The built HTTPS/SSO browser checks also confirm that initial page loading does
 not fetch the validation chunk, a run does fetch it, and aborting that chunk
@@ -100,14 +94,8 @@ operator acceptance work. Branch protection is unavailable on the current
 GitHub plan for this private repository, so the release gate is a documented
 operator control, not server-side enforcement.
 
-The image gate caught real high/critical advisories in the initial Debian,
-OAuth2 Proxy, Go, and Alpine dependencies. The deployable API uses a smaller
-Alpine runtime, OS security packages are upgraded, and the SSO/edge binaries use
-verified upstream release commits with patched Go/x/net. Upstream release tags
-are preserved in Go build metadata to avoid misidentification as old-major
-pseudo-versions. The final five images pass the high/critical gate; no findings
-are ignored. Low/medium findings and newly published advisories still require
-ongoing review. Version/hash locks and CI do not guarantee security.
+Image scans have no suppressed findings. Low/medium findings and newly published
+advisories still require review. Version/hash locks and CI do not guarantee security.
 
 Real-provider MFA, DNS/public TLS, revocation/refresh behavior, host-specific
 load/monitoring, firewall/secret permissions, and operational recovery still
@@ -117,82 +105,22 @@ remains private.
 
 ## Verified interactions
 
-- Architecture node selection updates the explanation, without executing tools.
-- Plain-language steps explain the document instruction and file-access boundary.
-  Planned AWS flow and fixed-role inspections remain available in a collapsed
-  section, explicitly separate from local results.
-- npm/Python package names and the lockfile consistently use `beacon`; the
-  browser, API documentation, health response, and CLI use Beacon branding.
-- Role selection inspects planned scope, without changing execution identities.
-- Read-only document previews expand, collapse, and switch.
-- React Bits component states are explicitly local visual previews.
-- AnimatedList keyboard handling is scoped; Tab is not intercepted globally.
-- The guide supports navigation and Escape dismissal, including React StrictMode.
-- The walkthrough adds/removes a hidden instruction and illustrates access to
-  both files. Applying an example resets draft execution options without running
-  a simulation or changing an existing capture; focus returns to the editor.
-  Exiting steps are inert and closing without applying restores trigger focus.
-- Secondary navigation stays hidden until opened. Mobile navigation traps focus;
-  both desktop and mobile support Escape and focus return.
-- System and explicit reduced-motion preferences are respected.
-- Light/dark themes persist across reloads and synchronize between tabs. The
-  device preference remains live, unknown values fall back safely, and denied
-  storage does not break the app. The production same-origin theme script loads
-  with the strict script policy intact; only the theme preference is persisted.
-- Direct links, Back/Forward, page titles, and draft preservation are exercised.
-- Magnetic button content attracts/repels by at most five pixels without moving
-  the hit area. Keyboard activation, touch/coarse-pointer static alternatives,
-  and runtime reduced-motion changes are covered.
-- The permission preview changes document scope descriptions without executing
-  tools, editing the policy draft, or presenting configured access as evidence.
-- RubberSegment supports native clicks, scoped arrow/Home/End navigation, and
-  an unselected state for custom document drafts.
-- SpotlightCard responds to pointer/focus without adding focusable decoration;
-  ClickSpark leaves native button activation intact.
-- Real click bursts finish and clear; switching the system motion preference at
-  runtime disables lighting, spring animation, and spark rendering.
-- The interface remains usable without a local API connection.
-- Real local API calls capture paired outcomes; no frontend-fabricated replacement
-  is used when the API fails.
-- Clean/ignored attacks show No private file requested rather than claiming a permission denial.
-- Retrieval without disclosure is distinguished from both denial and exposure.
-- Protected context never reuses payroll from a previous vulnerable run.
-- Session protection, foreign-origin rejection, UTF-8 input bounds, body limits,
-  fixed tool identifiers, rate limiting, and idempotency are tested.
-- Draft changes leave existing results attached to their original snapshot.
-- The default workspace has one empty state, collapsed options, and no empty
-  graphs or evidence panels. Headings and default copy contain no long dashes.
-- Access measurements open on demand; inspection tabs support arrow/Home/End
-  navigation and retain event filters while switching views.
-- Closing inspection pauses replay without making new API requests.
-- Visible graph nodes update with replay and open the correct inspection text.
-- Replay filters and playback controls use captured events, not new execution.
-- Exported JSON matches the API capture. Valid imports perform no execution;
-  exported replay reports preserve the unverified-authenticity warning.
-- Unknown/cloud claims, malformed traces, contradictory measurements, changed
-  document hashes, oversized inputs, and active HTML are rejected or kept inert.
-
-The redesigned lab was reviewed in light/dark themes at 1440px, 390px, and 320px,
-with separate preview/result/graph/walkthrough screenshots. Overflow and axe
-checks covered open options, How it works, Interaction studio, Run locally, and
-all walkthrough steps. Browser assertions require visible graph nodes, including
-keyboard selection of the correct inspector. Earlier verification
-corrected graph node sizing and tool-chip contrast; cleanup verification also
-caught and corrected empty-state text contrast.
-
-The normal-motion browser check exercises real canvas strokes and verifies that
-the canvas clears after the click burst. It also switches the system preference
-at runtime. That check caught a snapshot-only motion-hook behavior; the new
-controls and app now use live media-query subscriptions rather than relying only
-on the library's initial reduced-motion value.
-
-Redesign checks corrected selected-control and nested-walkthrough contrast,
-Back navigation to an unhashed lab URL, and modal positioning. Running Docker
-network creation/removal alongside browser tests interrupted Chromium asset
-loading with `ERR_NETWORK_CHANGED`. The final browser suite ran separately from
-container checks; no assertion or navigation retry policy was relaxed. The
-private HTTPS/SSO stack separately verified the production theme bootstrap,
-persisted selection, no browser errors, and unchanged authentication boundaries.
+- Walkthrough examples replace drafts without running them or changing captures.
+  Closing restores focus; exiting steps cannot receive keyboard focus.
+- Theme preferences persist, synchronize between tabs, follow device changes,
+  and tolerate denied storage. Theme loading keeps the strict script policy.
+- Direct links, Back/Forward, page titles, draft preservation, and mobile focus
+  containment work. Keyboard navigation stays scoped to the active control.
+- Attraction/repulsion moves only button contents, by at most five pixels.
+  Touch and reduced motion remain static. Spark animation stops after each burst.
+- Document and future AWS previews never execute tools or claim run evidence.
+- Clean/ignored attacks do not claim permission enforcement. Retrieval, context
+  delivery, denial, and final disclosure remain distinct; role contexts are isolated.
+- Draft edits preserve original captures. Inspection filters, playback, keyboard
+  graph selection, and node layout do not trigger another run.
+- Imports perform no execution and remain source-unverified. Unknown/cloud claims,
+  inconsistent traces, changed hashes, credential patterns, and oversized inputs
+  are rejected; document HTML stays inert.
 
 These checks establish local application and synthetic-issuer deployment
 behavior only. There has been no real LLM evaluation, AWS IAM/S3 validation,

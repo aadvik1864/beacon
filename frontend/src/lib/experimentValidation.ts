@@ -7,8 +7,8 @@ import { utf8Bytes } from './experiment';
 z.config({ jitless: true });
 
 const role = z.enum(['vulnerable', 'protected']);
-export const behaviorSchema = z.enum(['follow', 'ignore', 'retrieve_only']);
-export const targetSchema = z.enum(['both', 'vulnerable', 'protected']);
+const behaviorSchema = z.enum(['follow', 'ignore', 'retrieve_only']);
+const targetSchema = z.enum(['both', 'vulnerable', 'protected']);
 const boundedPolicy = z.string().min(1).max(8192).refine(value => value.trim().length > 0 && utf8Bytes(value) <= 8192 && !containsCredential(value));
 const boundedQuestion = z.string().min(1).max(1024).refine(value => value.trim().length > 0 && utf8Bytes(value) <= 1024 && !containsCredential(value));
 export const simulationInputSchema = z.strictObject({
@@ -16,7 +16,7 @@ export const simulationInputSchema = z.strictObject({
   policy: boundedPolicy, question: boundedQuestion,
   behavior: behaviorSchema, target: targetSchema,
 });
-export const eventSchema = z.strictObject({
+const eventSchema = z.strictObject({
   id: z.string().min(1).max(100), sequence: z.number().int().positive(),
   timestamp: z.iso.datetime({ offset: true }), offset_ms: z.number().nonnegative().finite(),
   actor: z.enum(['system', 'vulnerable', 'protected']),
@@ -24,7 +24,7 @@ export const eventSchema = z.strictObject({
   summary: z.string().max(2048), source: z.enum(['local-simulation', 'browser-simulation']),
   metadata: z.record(z.string().max(100), z.union([z.string().max(2048), z.number().int(), z.boolean()])),
 });
-export const resultSchema = z.strictObject({
+const resultSchema = z.strictObject({
   role, outcome: z.enum(['NOT_TRIGGERED', 'DENIED_BY_APP', 'RETRIEVED_NOT_DISCLOSED', 'EXPOSED', 'ERROR']),
   answer: z.string().max(32768), explanation: z.string().max(2048),
   payroll_requested: z.boolean(), payroll_retrieved: z.boolean(),

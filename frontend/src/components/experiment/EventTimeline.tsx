@@ -1,22 +1,24 @@
 import { useState } from 'react';
-import { ArrowLeft, ArrowRight, Clock3, Pause, Play, ScanSearch } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Clock3, Pause, Play } from 'lucide-react';
 import AnimatedList from '../react-bits/AnimatedList';
 import CopyButton from '../CopyButton';
 import MagneticButton from '../react-bits/MagneticButton';
 import type { useExperiment } from '../../hooks/useExperiment';
+import type { RunRecord } from '../../lib/experiment';
 
-export default function EventTimeline({ experiment, reduceMotion }: { experiment: ReturnType<typeof useExperiment>; reduceMotion: boolean }) {
+export default function EventTimeline({ record, experiment, reduceMotion }: {
+  record: RunRecord; experiment: ReturnType<typeof useExperiment>; reduceMotion: boolean;
+}) {
   const [actor, setActor] = useState('all');
   const [kind, setKind] = useState('all');
-  const { record, cursor, selectEvent, playing, togglePlayback, replayDelay, setReplayDelay } = experiment;
-  const filtered = record?.events.filter(event => (actor === 'all' || event.actor === actor) && (kind === 'all' || event.event_type === kind)) ?? [];
-  const selected = record?.events[cursor];
+  const { cursor, selectEvent, playing, togglePlayback, replayDelay, setReplayDelay } = experiment;
+  const filtered = record.events.filter(event => (actor === 'all' || event.actor === actor) && (kind === 'all' || event.event_type === kind));
+  const selected = record.events[cursor];
   const selectedIndex = filtered.findIndex(event => event.sequence === cursor + 1);
 
   return (
     <section className="timeline-panel" aria-labelledby="timeline-title">
       <div className="panel-heading"><div><Clock3 size={17} /><h2 id="timeline-title">Events</h2></div></div>
-      {!record ? <div className="timeline-empty"><ScanSearch size={25} /><h3>No events to inspect yet.</h3><p>Run a local simulation or import a saved simulation report.</p></div> : <>
         <div className="replay-toolbar">
           <div className="replay-buttons"><MagneticButton className="icon-button" aria-label="Previous event" disabled={cursor === 0} onClick={() => selectEvent(cursor - 1)}><ArrowLeft size={16} /></MagneticButton><MagneticButton className="button secondary small" onClick={togglePlayback}>{playing ? <Pause size={15} /> : <Play size={15} />}{playing ? 'Pause replay' : 'Play replay'}</MagneticButton><MagneticButton className="icon-button" aria-label="Next event" disabled={cursor === record.events.length - 1} onClick={() => selectEvent(cursor + 1)}><ArrowRight size={16} /></MagneticButton></div>
           <label className="replay-speed">Replay pace<select value={replayDelay} onChange={event => setReplayDelay(Number(event.target.value))}><option value={1600}>1.6s / event</option><option value={800}>0.8s / event</option><option value={400}>0.4s / event</option></select></label>
@@ -32,10 +34,9 @@ export default function EventTimeline({ experiment, reduceMotion }: { experiment
             }} /> : <p className="filter-empty">No events match these filters.</p>}
           </div>
           <div className="event-inspector">
-            {selected && <><div className="event-inspector-heading"><span>Selected event</span><CopyButton text={JSON.stringify(selected, null, 2)} label="Copy selected event" /></div><h3>{selected.summary}</h3><dl><div><dt>Source</dt><dd>Local simulation</dd></div><div><dt>Actor</dt><dd>{selected.actor}</dd></div><div><dt>Type</dt><dd>{selected.event_type}</dd></div><div><dt>Timestamp</dt><dd>{selected.timestamp}</dd></div></dl><pre><code>{JSON.stringify(selected.metadata, null, 2)}</code></pre></>}
+            {selected && <><div className="event-inspector-heading"><span>Selected event</span><CopyButton text={JSON.stringify(selected, null, 2)} label="Copy selected event" /></div><h3>{selected.summary}</h3><dl><div><dt>Source</dt><dd>{selected.source === 'browser-simulation' ? 'Browser simulation' : 'Local simulation'}</dd></div><div><dt>Actor</dt><dd>{selected.actor}</dd></div><div><dt>Type</dt><dd>{selected.event_type}</dd></div><div><dt>Timestamp</dt><dd>{selected.timestamp}</dd></div></dl><pre><code>{JSON.stringify(selected.metadata, null, 2)}</code></pre></>}
           </div>
         </div>
-      </>}
     </section>
   );
 }

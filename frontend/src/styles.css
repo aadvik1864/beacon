@@ -287,8 +287,6 @@ summary::-webkit-details-marker { display: none; }
 .graph-inspector>p { color: var(--muted); font-size: 13px; line-height: 1.8; margin-top: 7px; max-width: 78ch; }
 .graph-text-alternative { margin: 0 21px 18px; color: var(--signal); font-size: 13px; }
 .graph-text-alternative>p { margin-top: 10px; color: var(--muted); line-height: 1.8; }
-.timeline-empty { padding: 30px; text-align: center; color: var(--muted); }
-.timeline-empty h3, .timeline-empty p { margin-top: 10px; }
 .replay-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 15px; padding: 17px 21px 10px; }
 .replay-buttons { display: flex; align-items: center; gap: 7px; }
 .replay-speed { display: flex; align-items: center; gap: 9px; color: var(--muted); font-size: 13px; }

@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import { clearApiCaptures, runSimulation } from '../lib/api';
 import { executionMode, type ExecutionMode } from '../lib/executionMode';
 import {
   CLEAN_POLICY, NORMAL_QUESTION, parseSimulationInput, validateRecord,
@@ -51,8 +50,11 @@ export function useExperiment(mode: ExecutionMode = executionMode) {
       let result: RunRecord;
       if (mode === 'browser-demo') {
         const { runBrowserSimulation } = await import('../lib/browserSimulation');
+        request.signal.throwIfAborted();
         result = await runBrowserSimulation(parsed.data, request.signal);
       } else {
+        const { runSimulation } = await import('../lib/api');
+        request.signal.throwIfAborted();
         result = await runSimulation(parsed.data, request.signal);
       }
       request.signal.throwIfAborted();
@@ -132,6 +134,8 @@ export function useExperiment(mode: ExecutionMode = executionMode) {
     controller.current = request;
     const deadline = window.setTimeout(() => request.abort(), 5000);
     try {
+      const { clearApiCaptures } = await import('../lib/api');
+      request.signal.throwIfAborted();
       await clearApiCaptures(request.signal);
     } catch {
       setError('Browser capture cleared. API cache deletion could not be confirmed; it expires automatically.');
@@ -145,7 +149,7 @@ export function useExperiment(mode: ExecutionMode = executionMode) {
 
   return {
     policy, setPolicy, question, setQuestion, behavior, setBehavior,
-    record, origin, busy, error, setError, cursor, playing, replayDelay, setReplayDelay,
+    record, origin, busy, error, cursor, playing, replayDelay, setReplayDelay,
     dirty, run, importRecord, selectEvent, togglePlayback, clear,
   };
 }

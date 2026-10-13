@@ -126,6 +126,5 @@ network setup to avoid transient browser network errors.
 - AWS, Bedrock, S3 uploads, and cloud audit evidence are not implemented.
 
 Further reading: [architecture](docs/architecture.md), [design](docs/design.md),
-[implementation status](docs/implementation-status.md),
 [verification](docs/verification.md), and
 [third-party licenses](frontend/THIRD_PARTY_NOTICES.md).

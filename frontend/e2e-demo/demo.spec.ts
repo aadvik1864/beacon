@@ -8,14 +8,16 @@ test.beforeEach(async ({ page }) => {
   page.on('request', request => {
     const path = new URL(request.url()).pathname;
     if (path.startsWith('/api/') || path.startsWith('/oauth2/')) observed.push(`Unexpected backend call: ${path}`);
+    if (path.startsWith('/assets/api-')) observed.push('Browser demo loaded the unused API client');
   });
   page.on('pageerror', error => observed.push(error.message));
   page.on('console', message => { if (message.type() === 'error') observed.push(message.text()); });
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/');
   await page.evaluate(() => document.addEventListener('securitypolicyviolation', event => {
-    (window as Window & { demoCspViolations?: string[] }).demoCspViolations ??= [];
-    (window as Window & { demoCspViolations: string[] }).demoCspViolations.push(event.violatedDirective);
+    const state = window as Window & { demoCspViolations?: string[] };
+    state.demoCspViolations ??= [];
+    state.demoCspViolations.push(event.violatedDirective);
   }));
 });
 test.afterEach(async ({ page }) => {
@@ -95,6 +97,7 @@ test('graph inspection, event replay, clearing and validated import stay in the 
   await expect(page.locator('[data-id="payroll-vulnerable"] .beacon-graph-node')).toHaveAttribute('data-stage', 'exposed');
   await expect(page.locator('[data-id="payroll-protected"] .beacon-graph-node')).toHaveAttribute('data-stage', 'denied');
   await page.getByRole('tab', { name: 'Events', exact: true }).click();
+  await expect(page.locator('.event-inspector').getByText('Browser simulation', { exact: true })).toBeVisible();
   await page.getByRole('slider', { name: 'Scrub recorded events' }).press('Home');
   await expect(page.getByText('Event 1 /', { exact: false })).toBeVisible();
   await page.getByRole('button', { name: 'Play replay' }).click();

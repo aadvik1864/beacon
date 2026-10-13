@@ -1,9 +1,10 @@
 # Security
 
 Beacon is a synthetic prompt-injection simulation lab. It must not process real
-payroll, cloud credentials, or confidential documents. See
-[private deployment](docs/deployment.md) for the supported security boundary,
-secret handling, limitations, and launch checklist.
+payroll, cloud credentials, or confidential documents. See the
+[public-demo guide](docs/public-demo.md) for the browser-only showcase, or
+[private deployment](docs/deployment.md) for API hosting, secret handling,
+limitations, and launch checks.
 
 Only the current release and its locked dependencies are supported. Review
 dependency/image updates and rerun tests, SSO checks, and vulnerability scans.

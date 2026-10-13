@@ -14,8 +14,6 @@ interface StatusMarkProps {
   progress?: number;
   label?: ReactNode;
   color?: string;
-  doneColor?: string;
-  errorColor?: string;
   size?: number;
   strokeWidth?: number;
   dashes?: number;
@@ -38,7 +36,7 @@ const clamp01 = (value: number) => Math.min(1, Math.max(0, value));
 
 export default function StatusMark({
   status = 'pending', progress, label, color = 'currentColor',
-  doneColor = '#137665', errorColor = '#B42332', size = 20,
+  size = 20,
   strokeWidth = 2, dashes = 8, spinDuration = 1100, arcLength = 0.68,
   reduceMotion = false, className = '', style,
 }: StatusMarkProps) {
@@ -112,7 +110,7 @@ export default function StatusMark({
       className={`bits-status-mark ${className}`}
       data-status={status}
       data-reduced={reduced ? '' : undefined}
-      style={{ '--sm-color': color, '--sm-done': doneColor, '--sm-error': errorColor, ...style } as CSSProperties}
+      style={{ '--sm-color': color, ...style } as CSSProperties}
     >
       <svg
         viewBox="0 0 24 24" width={size} height={size}

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { getApiHealth, type ApiHealth } from '../lib/api';
+import type { ApiHealth } from '../lib/api';
 
 export function useApiHealth(enabled = true) {
   const [health, setHealth] = useState<ApiHealth | null>(null);
@@ -16,6 +16,8 @@ export function useApiHealth(enabled = true) {
     const timeout = window.setTimeout(() => controller.abort(), 3500);
     setState('checking');
     try {
+      const { getApiHealth } = await import('../lib/api');
+      controller.signal.throwIfAborted();
       const result = await getApiHealth(controller.signal);
       if (id === generation.current) {
         setHealth(result);

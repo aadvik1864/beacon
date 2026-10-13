@@ -1,14 +1,23 @@
 # Beacon architecture
 
-## Implemented now
+## Browser showcase
 
-The same simulation engine can also run behind private HTTPS/OIDC access. See
-[deployment](deployment.md) for the production boundary and launch gates. In that
-mode Caddy authenticates through OAuth2 Proxy, the private gateway overwrites
-identity headers, and the API independently checks its gateway key and allowlist.
-OIDC tokens stay in an encrypted, authenticated, private in-memory Redis store;
-only opaque HttpOnly session tickets reach the browser. Lab captures remain in
-short-lived, user-isolated API memory, not Redis or a database.
+```text
+Static HTTPS host -> React interface -> browser simulation -> captured result
+```
+
+`npm run build:demo` selects browser execution explicitly. It makes no API calls
+and requires no accounts or server. The scripted browser engine is checked
+against the Python engine with 34 parity cases. API failures never select this
+mode automatically.
+
+All sample files, including fictional payroll, are public in this build. Its
+permission checks teach the access boundary; they cannot protect data from
+someone inspecting or modifying their own browser. Documents and captures stay
+in memory. Only the theme preference is persisted. See [public-demo.md](public-demo.md)
+for hosting and deployed-URL checks.
+
+## Local API
 
 ```text
 React + TypeScript + React Bits + React Flow (localhost:5173)
@@ -76,34 +85,23 @@ while the full capture/export includes policy, question, and final answers.
 These are development safeguards, not public-production authentication or a
 multi-user security boundary. Do not expose either development server publicly.
 
-## Planned cloud architecture — not implemented
+## Optional private hosting
 
-```text
-Trusted local operator
-        │
-Local API — fixed, server-side target allowlist
-        ├── Vulnerable Lambda + vulnerable execution role
-        └── Protected Lambda + protected execution role
-                        │
-                    Bedrock / S3
-```
+The Python engine can also run behind private HTTPS/OIDC access. Caddy routes
+through OAuth2 Proxy; the gateway overwrites identity headers, and the API
+independently checks its gateway key and allowlist. OIDC tokens stay in encrypted
+server-side Redis sessions. Only opaque HttpOnly tickets reach the browser.
+Lab captures stay in short-lived, user-isolated API memory. See
+[deployment.md](deployment.md) for configuration and launch gates.
 
-Choosing a comparison target is not choosing its execution identity. Lambda roles
-stay fixed, and neither function may assume the other role or invoke the other
-function. No browser-supplied ARNs, AWS commands, object paths, or credentials.
-
-Future document identifiers map to fixed keys in a dedicated private bucket:
-`policies/leave-policy.txt` and `private/payroll.csv`. The vulnerable role is
-deliberately overprivileged only relative to the application's intended access;
-AWS still correctly authorizes it. The protected role must receive a real S3
-denial. Both functions must use identical code, model, prompts, and documents.
-
-Deployment and live inference require approval, a cost/security review, and a
-cleanup plan. Free-tier eligibility must be checked, not assumed.
+AWS execution is not implemented. The collapsed AWS explanation in the interface
+is a design illustration, not evidence of a deployment or live permission test.
 
 ## Provenance
 
 - **Local preview:** component states and planned architecture explanations.
+- **Browser simulation:** captured scripted runs with `execution_source` and
+  event sources set to `browser-simulation`; no network execution.
 - **Local simulation:** captured requests/outcomes from the scripted local engine.
 - **Imported simulation replay:** bounded schema, trace consistency, and document
   hash validated; file authenticity remains **unverified**. Import is entirely
