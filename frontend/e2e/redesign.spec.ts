@@ -153,9 +153,9 @@ test('magnetic content attracts and repels without moving the hit area', async (
   await expect(attract).toHaveAttribute('aria-pressed', 'true');
 });
 
-test('both themes pass WCAG checks across all views and walkthrough steps at 320px', async ({ page }) => {
-  await page.setViewportSize({ width: 320, height: 850 });
-  for (const theme of ['light', 'dark']) {
+for (const theme of ['light', 'dark']) {
+  test(`${theme} theme passes WCAG checks across all views and walkthrough steps at 320px`, async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 850 });
     if (theme === 'dark') await page.getByRole('button', { name: 'Switch to dark mode' }).click();
     for (const name of ['Try it', 'How it works', 'Interaction studio', 'Run locally']) {
       await navigate(page, name);
@@ -175,8 +175,8 @@ test('both themes pass WCAG checks across all views and walkthrough steps at 320
       expect(await guide.evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true);
     }
     await page.keyboard.press('Escape');
-  }
-});
+  });
+}
 
 test('limited-only and read-without-disclosure results remain distinct in dark mode', async ({ page }) => {
   await page.getByRole('button', { name: 'Switch to dark mode' }).click();

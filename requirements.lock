@@ -1,4 +1,4 @@
-# Runtime only. Linux Python 3.12, amd64/arm64 wheels, verified PyPI SHA-256.
+# Runtime only. Python 3.12 Linux / 3.14 Alpine, amd64/arm64, verified PyPI SHA-256.
 # Update versions/hashes together with requirements-dev.lock and rerun audits.
 annotated-doc==0.0.5 \
     --hash=sha256:117bac03a25ede5df5440e855b32d556049ca169ead221505badf432fed4b101
@@ -22,7 +22,9 @@ pydantic_core==2.50.0 \
     --hash=sha256:ae45853d25a23fba56681d2f9ed41f3e3f12f0a3b2393fefa08ff6406320a1f5 \
     --hash=sha256:f187030fc3d62c668feb0f09e92852e0eb414d7fcefc4748f2e67d245aade37e \
     --hash=sha256:1751e92d56fbb623b937d73985e500b1a2b1053e56f718a6c564660d99bb9cb0 \
-    --hash=sha256:24302bf47319a64e5c5c7c29e971d2b7a20a190c64e59035a3df9582dec636fa
+    --hash=sha256:24302bf47319a64e5c5c7c29e971d2b7a20a190c64e59035a3df9582dec636fa \
+    --hash=sha256:4f31af62efd1fd0257735b72e6716b32d4f207654adeabfe524d44baf1bb6bed \
+    --hash=sha256:c05d035e72530f6b00297941b0162218601542b76870c3bf2756bd87f16fc538
 starlette==1.7.0 \
     --hash=sha256:67f8e99895493dd2911a03f11314af6ceebeae4e704bb9f43dfc6a9db151c93e
 typing-inspection==0.4.4 \

@@ -11,7 +11,7 @@ and synthetic OIDC identities, not a real production provider or public site.
 | Python API/engine/CLI/security/release/monitor tests (`.venv/bin/python -m pytest`) | 134 passed |
 | React/schema/hook/API/theme/browser-engine tests (`npm run test`) | 116 passed |
 | Bounded deployment readiness/navigation regressions (`node --test tests/deployment/navigation.test.mjs`) | 15 passed |
-| API browser tests (`npm run test:e2e`) | 56 passed across desktop/mobile |
+| API browser tests (`npm run test:e2e`) | 58 passed across desktop/mobile |
 | Static showcase browser tests (`npm run test:e2e:demo`) | 14 passed across desktop/mobile |
 | TypeScript check and both production builds (`npm run build`, `npm run build:demo`) | Passed |
 | Python/browser parity (`scripts/check-browser-parity.py --check`) | 34 fixture cases current; included in the frontend test count |
@@ -26,6 +26,11 @@ and synthetic OIDC identities, not a real production provider or public site.
 | Same-engine CLI | Injected scenario produces EXPOSED / DENIED_BY_APP |
 
 Automated accessibility checks are not a full manual accessibility audit.
+The same 134-test Python suite also passes in the pinned Python 3.14 Alpine API
+base image; CI unit tests remain on Python 3.12. Runtime wheel hashes cover
+Python 3.14 Alpine on amd64 and arm64, without disabling hash enforcement.
+Light/dark accessibility scans run as separate tests, with the same assertions
+and 30-second per-test limit.
 The Python test run currently emits a third-party Starlette/httpx deprecation
 warning; all API tests pass. Initial JavaScript is approximately 443 kB
 (140 kB gzip). The API client, browser engine, validation engine, and graph load
@@ -52,7 +57,7 @@ for Pages setup and deployed-URL acceptance; the repository can remain private.
 
 ## Private deployment/security verification
 
-335 Python/frontend/browser/navigation tests pass, in addition to the container SSO smoke
+337 Python/frontend/browser/navigation tests pass, in addition to the container SSO smoke
 checks. Private API hosting requires independent private-file gateway/CSRF keys, a fixed
 HTTPS origin, and an explicit user allowlist; partial/invalid configuration fails
 closed. Tests cover authentication before body parsing, strict origin and fetch
