@@ -14,6 +14,7 @@ frontend/**
 !frontend/THIRD_PARTY_NOTICES.md
 !frontend/tsconfig*.json
 !frontend/vite.config.ts
+!frontend/vercel.json
 !frontend/index.html
 !frontend/public/
 frontend/public/**
@@ -51,6 +52,7 @@ deploy/**
 # Directory re-inclusion can re-include descendants with the legacy builder.
 frontend/node_modules/
 frontend/dist/
+frontend/.vercel/
 frontend/e2e/
 frontend/test-results/
 frontend/playwright-report/
