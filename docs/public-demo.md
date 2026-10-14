@@ -1,4 +1,4 @@
-# Public browser simulation on Cloudflare Pages
+# Public browser simulation
 
 The public demo runs the scripted fixture entirely in the visitor's browser.
 It needs no backend, sign-in, AWS account, paid model, database, or private file.
@@ -61,7 +61,7 @@ expectations remain current. Regenerate them only after reviewing a deliberate
 engine change with `scripts/check-browser-parity.py`.
 
 Source maps are explicitly disabled. Zod's optional code generation is disabled
-so schema validation works without `unsafe-eval`. The Pages `_headers` policy
+so schema validation works without `unsafe-eval`. The static-host security policy
 allows scripts/fonts/images from this origin, blocks application connections,
 framing, workers, forms, objects and base overrides, and permits inline styles
 needed by React Flow and Motion. No analytics, external fonts or paid services
@@ -70,7 +70,46 @@ Both build modes include the React Bits and IBM Plex font licenses under
 `dist/licenses/`. The deployed-URL suite checks that those notices are served
 unchanged; keep them in the uploaded build.
 
-## First Pages release
+## Vercel release
+
+Use the existing Hobby plan and a separate `beacon` project. No custom domain,
+backend, paid integration, analytics, or Speed Insights is needed. Keep the GitHub
+repository private. Vercel's deployment source and logs remain account-protected.
+
+Run the CLI from `frontend/` and use Node.js `24.x`. If importing the GitHub
+repository instead, select `frontend` as the project root. The tracked
+`frontend/vercel.json` selects Vite, `npm ci --ignore-scripts`,
+`npm run build:demo`, and the `dist` output. It applies the same security headers
+as Pages; a regression test prevents the policies from drifting. Navigation uses
+URL hashes, so no catch-all rewrite or API route is needed.
+
+Wait for the exact commit's complete GitHub verification before releasing.
+Automatic Git deployments are disabled in `vercel.json` to keep that manual gate.
+From `frontend/`, use an authenticated Vercel CLI:
+
+```bash
+npx vercel@64.0.2 link --project beacon
+npx vercel@64.0.2 pull --environment=production
+npx vercel@64.0.2 build --prod
+npx vercel@64.0.2 deploy --prebuilt --prod
+```
+
+The prebuilt deployment uploads the generated static output, not the repository.
+The ignored `.vercel/` directory contains account/project linkage, downloaded
+environment settings, and local deployment output; never commit or publish it.
+Do not add credentials to the frontend or enable deployment-source sharing.
+
+Test the assigned public production domain without a protection-bypass token:
+
+```bash
+BEACON_DEMO_URL=https://ACTUAL_PROJECT.vercel.app npx playwright test --config playwright.demo.config.ts
+```
+
+Keep the previous successful deployment for rollback through Vercel's dashboard,
+then rerun deployed-URL acceptance. Preview deployment protection may remain
+enabled; the production showcase must be accessible without an account.
+
+## Cloudflare Pages alternative
 
 1. Commit and push the finished changes; keep the repository private.
 2. Wait for the exact commit's complete `Verify private simulation` workflow,

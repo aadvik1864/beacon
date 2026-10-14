@@ -27,9 +27,8 @@ npm run preview
 Open **http://127.0.0.1:4173**. For development with live reloading, use
 `npm run dev -- --mode demo` instead.
 
-To publish this build, follow the [Cloudflare Pages guide](docs/public-demo.md).
-The website can be public while the GitHub repository stays private. A live
-showcase URL has not been configured yet.
+To publish this build, follow the [Vercel or Cloudflare Pages guide](docs/public-demo.md).
+The website can be public while the GitHub repository stays private.
 
 ### What to try
 

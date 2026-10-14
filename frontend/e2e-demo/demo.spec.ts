@@ -39,6 +39,12 @@ test('static host applies the tested security policy and visitors need no connec
   expect(response.headers()['content-security-policy']).not.toContain("'unsafe-eval'");
   expect(response.headers()['x-content-type-options']).toBe('nosniff');
   expect(response.headers()['x-frame-options']).toBe('DENY');
+  expect(response.headers()['referrer-policy']).toBe('no-referrer');
+  expect(response.headers()['permissions-policy']).toBe('camera=(), microphone=(), geolocation=(), payment=(), usb=()');
+  expect(response.headers()['strict-transport-security']).toBe('max-age=31536000');
+  for (const path of ['/api/health', '/oauth2/start', '/src/App.tsx', '/package.json', '/requirements.lock', '/.env', '/.git/config']) {
+    expect((await page.request.get(path)).status(), path).toBe(404);
+  }
   await expect(page.getByRole('heading', { name: 'Learn why AI needs access limits.' })).toBeVisible();
   await expect(page.locator('.lab-safety')).toContainText('Browser simulation');
   await expect(page.locator('.lab-safety')).toContainText('not genuine AWS permission enforcement');

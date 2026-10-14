@@ -12,6 +12,7 @@ frontend/dist/
 frontend/coverage/
 frontend/test-results/
 frontend/playwright-report/
+.vercel/
 reports/*
 !reports/.gitkeep
 .DS_Store

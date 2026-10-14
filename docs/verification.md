@@ -9,7 +9,7 @@ and synthetic OIDC identities, not a real production provider or public site.
 | Check | Result |
 | --- | --- |
 | Python API/engine/CLI/security/release/monitor tests (`.venv/bin/python -m pytest`) | 134 passed |
-| React/schema/hook/API/theme/browser-engine tests (`npm run test`) | 116 passed |
+| React/schema/hook/API/theme/browser-engine/deployment tests (`npm run test`) | 119 passed |
 | Bounded deployment readiness/navigation regressions (`node --test tests/deployment/navigation.test.mjs`) | 15 passed |
 | API browser tests (`npm run test:e2e`) | 58 passed across desktop/mobile |
 | Static showcase browser tests (`npm run test:e2e:demo`) | 14 passed across desktop/mobile |
@@ -52,12 +52,13 @@ execution is selected only by build configuration. Eight hook regressions cover
 execution errors and interruption without silently switching between API and
 browser engines.
 
-The public URL has not been deployed or tested. See [public-demo.md](public-demo.md)
-for Pages setup and deployed-URL acceptance; the repository can remain private.
+Vercel and Pages use the same tested security policy. Deployed-URL acceptance
+must run against the public HTTPS domain without sign-in or a protection bypass.
+See [public-demo.md](public-demo.md) for setup; the repository can remain private.
 
 ## Private deployment/security verification
 
-337 Python/frontend/browser/navigation tests pass, in addition to the container SSO smoke
+340 Python/frontend/browser/navigation tests pass, in addition to the container SSO smoke
 checks. Private API hosting requires independent private-file gateway/CSRF keys, a fixed
 HTTPS origin, and an explicit user allowlist; partial/invalid configuration fails
 closed. Tests cover authentication before body parsing, strict origin and fetch
@@ -105,7 +106,7 @@ advisories still require review. Version/hash locks and CI do not guarantee secu
 Real-provider MFA, DNS/public TLS, revocation/refresh behavior, host-specific
 load/monitoring, firewall/secret permissions, and operational recovery still
 require the [deployment launch checklist](deployment.md). CI is configured for
-pushes and pull requests; no production deployment has been performed. GitHub
+pushes and pull requests; no private API production deployment has been performed. GitHub
 remains private.
 
 ## Verified interactions
