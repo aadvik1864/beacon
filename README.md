@@ -4,7 +4,9 @@ Beacon is an interactive lab that shows why an AI assistant should only read the
 files it needs. Add a hidden instruction to a fictional document, then compare
 what happens with different levels of access.
 
-**[Try the live demo](https://beacon-demo-ebon.vercel.app)**
+**Live:** [beacon-aadvik.vercel.app](https://beacon-aadvik.vercel.app)
+
+**Demo:** [beacon-demo-ebon.vercel.app](https://beacon-demo-ebon.vercel.app)
 
 Open it in your browser. No account, installation, or cloud setup is needed.
 
