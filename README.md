@@ -6,8 +6,6 @@ what happens with different levels of access.
 
 **Live:** [beacon-aadvik.vercel.app](https://beacon-aadvik.vercel.app)
 
-**Demo:** [beacon-demo-ebon.vercel.app](https://beacon-demo-ebon.vercel.app)
-
 Open it in your browser. No account, installation, or cloud setup is needed.
 
 ## What to try
