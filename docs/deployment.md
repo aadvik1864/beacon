@@ -120,15 +120,15 @@ byte-identical. See the Dockerfiles for pinned sources and required updates.
 
 ### Release gate and rollback
 
-The current GitHub plan does not support branch protection for this private
-repository. Keep it private; do not treat a successful push as a release approval.
-If the plan later supports it, require the `verify` status on `main` and restrict
-direct pushes. The local release gate does not prevent a GitHub administrator or
+The source repository can be public or private. Keep deployment credentials,
+private configuration, and release manifests outside it. Require the `verify`
+status on `main` through branch protection where available; do not treat a
+successful push as a release approval. The local release gate does not prevent a GitHub administrator or
 host operator from bypassing these instructions.
 
 Stop on any failing gate; do not continue with an older or partial manifest.
 `scripts/check-release.py` requires a clean committed tree and authenticated
-GitHub CLI access. It checks that the repository is private and the newest
+GitHub CLI access. For public and private repositories alike, it checks that the newest
 default-branch verification for the exact commit is green, including every
 required test/deployment/scan step. It then rebuilds all five local images, runs
 the synthetic SSO checks, scans those images, and rechecks source/image/CI state.

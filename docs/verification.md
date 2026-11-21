@@ -89,16 +89,16 @@ produces an error without submitting a simulation or inventing a result.
 Existing browser workflows, replay/hash/credential guards, and accessibility
 checks remain passing.
 
-Release/monitor regressions require private exact-commit green CI with every
+Release/monitor regressions require exact-commit green CI for public or private repositories with every
 security step passed, reject dirty/changed source or image identities, preserve
 existing mode-0600 manifests, and omit configuration/exception contents from
 operator output. Host-health tests use mocked TLS/container measurements, not a
 real production host. The manifest pins tested local image content IDs for
 `--no-build --pull never`; it is unsigned and is not a registry digest or build
 attestation. Real-host scheduling/notifications and rollback rehearsal remain
-operator acceptance work. Branch protection is unavailable on the current
-GitHub plan for this private repository, so the release gate is a documented
-operator control, not server-side enforcement.
+operator acceptance work. Configure branch protection to require `verify`
+where available. The local release gate is an operator control and cannot
+prevent an administrator from bypassing it.
 
 Image scans have no suppressed findings. Low/medium findings and newly published
 advisories still require review. Version/hash locks and CI do not guarantee security.
@@ -106,8 +106,8 @@ advisories still require review. Version/hash locks and CI do not guarantee secu
 Real-provider MFA, DNS/public TLS, revocation/refresh behavior, host-specific
 load/monitoring, firewall/secret permissions, and operational recovery still
 require the [deployment launch checklist](deployment.md). CI is configured for
-pushes and pull requests; no private API production deployment has been performed. GitHub
-remains private.
+pushes and pull requests; no private API production deployment has been performed.
+The source repository is public; production credentials and configuration must remain private.
 
 ## Verified interactions
 

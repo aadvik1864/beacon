@@ -1,4 +1,4 @@
-"""Require green private-repository CI, rebuild/test/scan, and record local image identities."""
+"""Require green repository CI, rebuild/test/scan, and record local image identities."""
 
 import argparse
 from datetime import datetime, timezone
@@ -45,7 +45,6 @@ def source_commit():
 def verify_ci(repository, commit):
     require(re.fullmatch(r'[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+', repository), 'Use an owner/repository identifier.')
     metadata = json.loads(command('gh', 'api', f'repos/{repository}'))
-    require(metadata.get('private') is True, 'The release repository must remain private.')
     branch = metadata['default_branch']
     runs = json.loads(command(
         'gh', 'run', 'list', '--repo', repository, '--workflow', 'security.yml',
@@ -116,7 +115,7 @@ def main():
         return 1
     except (OSError, ValueError, KeyError, IndexError, TypeError, subprocess.SubprocessError):
         # Never echo command output, credentials, configuration, or raw exceptions.
-        print('Release check failed. Review local tooling, private GitHub access, and verification gates.', file=sys.stderr)
+        print('Release check failed. Review local tooling, GitHub access, and verification gates.', file=sys.stderr)
         return 1
     print('Release checks passed. Local image identities recorded; real-provider/host acceptance is still required.')
     return 0

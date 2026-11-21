@@ -30,21 +30,23 @@ def ci_fixture(release, monkeypatch, *, private=True, status='completed', conclu
     return run
 
 
-def test_release_requires_green_ci_and_every_security_step(release, monkeypatch):
-    run = ci_fixture(release, monkeypatch)
+@pytest.mark.parametrize('private', [True, False])
+def test_release_requires_green_ci_and_every_security_step(release, monkeypatch, private):
+    run = ci_fixture(release, monkeypatch, private=private)
     assert release.verify_ci(REPOSITORY, COMMIT) == run['url']
 
 
 @pytest.mark.parametrize('values', [
-    {'private': False}, {'status': 'in_progress'}, {'conclusion': 'failure'},
+    {'status': 'in_progress'}, {'conclusion': 'failure'},
     {'conclusion': 'cancelled'}, {'sha': 'b' * 40},
     {'conclusion': 'failure', 'older_green': True},
     {'missing': 'Gate deployable images on high/critical advisories'},
     {'missing': 'Verify private HTTPS/SSO deployment'},
     {'missing': 'Verify public browser demo'},
 ])
-def test_release_fails_closed_on_ci_failures(release, monkeypatch, values):
-    ci_fixture(release, monkeypatch, **values)
+@pytest.mark.parametrize('private', [True, False])
+def test_release_fails_closed_on_ci_failures(release, monkeypatch, values, private):
+    ci_fixture(release, monkeypatch, private=private, **values)
     with pytest.raises(release.ReleaseError):
         release.verify_ci(REPOSITORY, COMMIT)
 
