@@ -11,7 +11,7 @@ RUN go get github.com/smallstep/certificates@cddde30af36e238f156bb557bfd1f11a05f
 # Without it, Go invents a v2.0.0 pseudo-version and scanners misidentify this release.
 RUN git update-ref refs/tags/v2.11.9 0d98caea58f794f88e709b1bef2880996a471bca && go build -trimpath -ldflags='-s -w' -o /out/caddy ./cmd/caddy
 
-FROM caddy:2-alpine@sha256:d8542f48d34a9cf4e4c11a478865229840e87e4c96ea3f439101f31a5d35f75f
+FROM caddy:2-alpine@sha256:003a97808e781aa9f7e75cc2f43d34d461099031faf5e20faefb9f61126836f0
 # Upstream grants a file capability for low ports. We use high container ports;
 # remove it so execution also works with cap_drop=ALL/no-new-privileges.
 RUN apk --no-cache upgrade && setcap -r /usr/bin/caddy
